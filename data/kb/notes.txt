@@ -1,0 +1,12 @@
+REZ-AI is designed as a modular AI platform.
+The current stack is local-first for free development.
+Use KB mode should inject top relevant chunks into prompt context.
+Backend endpoint /api/chat spawns assistant CLI process.
+System prompt can be different per chat in the UI.
+Primary stability goals include timeout, retry, and safe contracts.
+REZ-AI არის ჩემი ლოკალური AI ასისტენტი, რომელიც მუშაობს ჩემს კომპიუტერზე LM Studio-სთან და ადგილობრივ მოდელთან.
+ძირითადი მიზანი: კოდში დახმარება, პროექტის სტრუქტურის დალაგება, და ეტაპობრივად RAG ფუნქციის დამატება.
+პასუხები მინდა იყოს მოკლე, პრაქტიკული და ნაბიჯ-ნაბიჯ, ერთი ნაბიჯით ერთდროულად.
+თუ რაიმე ქმედება შეიძლება იყოს საშიში (წაშლა/გადამოწერა/კომანდების გაშვება), ყოველთვის მთხოვე დადასტურება: CONFIRM.
+პროექტის root არის C:\Projects\rez-ai და ძირითადი ფოლდერები: apps/, prompts/, scripts/, data/kb/, data/cache/.[2026-03-02T09:01:00.012Z] (ui) Phase4 memory test line
+[2026-03-02T09:01:34.943Z] (ui) Phase4 memory test line 2

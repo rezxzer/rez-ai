@@ -1,0 +1,513 @@
+# REZ-AI Context Snapshot
+
+Use this as bootstrap context for new AI chats.
+
+## 1) Project overview
+- REZ-AI is a local-first modular AI platform focused on building core capability first, then platform/business layers.
+- Project root: `C:\Projects\rez-ai`.
+
+## 2) Current architecture
+- **UI:** `apps/ui` (Vite + React).
+- **Backend:** `server.js` (Node/Express).
+- **Assistant runtime:** `apps/assistant/rez-ai.js` (spawned by backend).
+- **Provider runtime:** LM Studio + Ollama are active provider paths; `remote_openai` exists as placeholder/not implemented.
+- **Communication flow (baseline):**
+  - UI -> `POST /api/chat`
+    - core fields: `message`, `systemPrompt`, `useKB`
+    - optional fields: `provider`, `model`, `planMode`
+  - Backend -> spawns assistant process, passes env, returns chat response.
+  - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
+
+## 3) Current project state
+- **Current phase:** `PHASE 55 — Guarded Internal Multi-Step Runtime (Minimal First Activation)` (in progress, Step 1 implemented).
+- **Latest phase closeout:** `PHASE 54 DoD — PASS`.
+- **Latest completed work (UI progress ledger):**
+  - `PHASE 55 Step 1 — Implement internal continuation gate (minimal, default-safe)`
+  - `REZ-AI Roadmap Update — Define PHASE 55 — Guarded Internal Multi-Step Runtime (Minimal First Activation)`
+  - `PHASE 54 Step 5 — DoD closeout + docs sync`
+  - `PHASE 54 DoD — PASS`
+  - `PHASE 54 Step 4 — Define internal observability breadcrumbs (planning)`
+  - `PHASE 54 Step 3 — Define safe cancellation / timeout semantics (planning)`
+  - `PHASE 54 Step 2 — Define internal step transition handler (planning)`
+  - `PHASE 54 Step 1 — Define internal execution loop boundary (planning)`
+  - `REZ-AI Roadmap Update — Define PHASE 54 — Bounded Multi-Step Runtime Activation (Internal-Only First Slice)`
+  - `PHASE 53 Step 4 — DoD closeout + docs sync`
+  - `PHASE 53 DoD — PASS`
+  - `PHASE 53 Step 3 — Define review / approval readiness boundary (planning)`
+  - `PHASE 53 Step 2 — Define step outcome semantics (planning)`
+  - `PHASE 53 Step 1 — Define internal multi-step unit model (planning)`
+  - `REZ-AI Roadmap Update — Define PHASE 53 — Multi-Step Execution Model (Planning Layer)`
+  - `REZ-AI Roadmap Update — Define Phase 52 Task / Execution Runtime Engine (First Active Runtime)`
+  - `PHASE 52 Step 1 — Define internal task unit model boundary`
+  - `PHASE 52 Step 2 — Define execution lifecycle transitions (internal-only)`
+  - `PHASE 52 Step 3 — Define bounded single-step execution + failure policy`
+  - `PHASE 52 Step 4 — DoD verification + docs sync`
+  - `PHASE 52 DoD — PASS`
+- **Phase 53 planning focus (not implemented):**
+  - Internal multi-step execution unit model definition (`execution unit`, `step list`, `step ordering`, `step boundaries`).
+  - Step outcome semantics definition (`continue`, `stop`, `fail`, `needs_review`).
+  - Review/approval readiness boundary definition for future runtime checkpoints.
+  - Strict non-goals remain explicit: no runtime changes, no `/api/chat` contract changes, no new endpoints/fields.
+- **Phase 53 Step 1 summary (planning-defined, docs-only):**
+  - Conceptual internal multi-step unit model is documented with planning-safe terminology only.
+  - Model framing is explicit: parent execution intent, ordered internal steps, bounded step-count concept, and terminal boundary concept.
+  - Step 1 remains internal/planning-only; no activation of runtime multi-step behavior is claimed.
+  - Explicit Step 1 non-goals are documented (no orchestrator/executor/chaining/approval/audit/public task visibility changes).
+  - `/api/chat` request/response contract remains unchanged in this step.
+- **Phase 53 Step 2 summary (planning-defined, docs-only):**
+  - Conceptual step-level outcomes are documented: `continue`, `stop`, `fail`, `needs_review`.
+  - Outcome semantics are framed as internal-only planning concepts for potential future multi-step flow.
+  - Current reality remains explicit: only task-level lifecycle exists; no real step-level execution runtime is active.
+  - Explicit Step 2 non-goals are documented (no step engine/scheduler/auto-loop/review activation/approval workflow/audit persistence/public state exposure).
+  - `/api/chat` request/response contract remains unchanged in this step.
+- **Phase 53 Step 3 summary (planning-defined, docs-only):**
+  - Conceptual review/approval readiness boundary is documented for future internal multi-step execution.
+  - Potential future review checkpoints are defined as planning-only boundary points (for example: pre higher-impact step, post `needs_review` outcome, or pre finalization confirmation).
+  - Review/approval linkage to future outcomes is conceptual only (`needs_review` primary, optional future escalation policy) and remains internal-only.
+  - Explicit Step 3 non-goals are documented (no approval engine/operator UI/review queue/workflow runtime/gating enforcement/audit persistence/public approval status exposure).
+  - `/api/chat` request/response contract remains unchanged in this step.
+- **Phase 53 Step 4 summary (docs-only closeout):**
+  - Phase 53 Step 1-3 planning wording was verified as conceptual/internal-only and implementation-safe.
+  - DoD checklist was closed with explicit PASS status after docs synchronization checks.
+  - Guardrails remain explicit: no runtime changes, no `/api/chat` contract changes, and no new endpoints/fields.
+  - No public task/state/review exposure claims were introduced in closeout wording.
+- **Phase 54 planning focus (not implemented):**
+  - Internal execution loop boundary model (bounded loop cap + deterministic exits).
+  - Internal step transition handler model (`continue`, `stop`, `fail`, `needs_review`) for future bounded flow.
+  - Safe cancellation/timeout semantics model for bounded internal runtime evolution.
+  - Internal observability breadcrumbs model for future step progression/failure tracing.
+  - Strict non-goals remain explicit: no approval engine, no operator UI, no public task visibility, no workflow platform activation, no audit persistence, no `/api/chat` contract changes, no new endpoints/fields.
+- **Phase 54 Step 1 summary (planning-defined, docs-only):**
+  - Conceptual internal execution loop boundary is documented for future bounded multi-step runtime evolution.
+  - Loop model framing is explicit: bounded loop model, hard max step-cap concept, and deterministic terminal exits.
+  - Step 1 remains planning-only/internal-only and does not claim active runtime loop activation.
+  - Explicit Step 1 non-goals are documented (no runtime loop activation, no scheduler/engine, no approval system, no public exposure).
+  - `/api/chat` request/response contract remains unchanged in this step.
+- **Phase 54 Step 2 summary (planning-defined, docs-only):**
+  - Conceptual internal step transition handler mapping is documented for `continue`, `stop`, `fail`, `needs_review`.
+  - Mapping is framed as future internal next-action semantics for bounded flow and remains non-active in runtime.
+  - `needs_review` transition linkage is conceptual/internal-only and does not imply active approval workflow.
+  - Explicit Step 2 non-goals are documented (no step scheduler, no runtime loop activation, no approval workflow, no public state exposure).
+  - `/api/chat` request/response contract remains unchanged in this step.
+- **Phase 54 Step 3 summary (planning-defined, docs-only):**
+  - Conceptual safe cancellation/timeout semantics are documented for future bounded multi-step evolution.
+  - Timeout framing is explicit at two levels: step-level timeout concept and whole-execution timeout budget concept.
+  - Safe cancellation/abort boundary and deterministic timeout/cancel terminal handling are defined as internal-only planning semantics.
+  - Explicit Step 3 non-goals are documented (no public cancel API, no runtime cancellation implementation, no timeout UI, no public state exposure).
+  - `/api/chat` request/response contract remains unchanged in this step.
+- **Phase 54 Step 4 summary (planning-defined, docs-only):**
+  - Conceptual internal observability breadcrumbs are documented for future runtime readiness.
+  - Trace semantics are explicit: step progression trace, step start/end trace points, failure trace, and timeout/cancel trace.
+  - Breadcrumb model remains minimal, diagnostic, and internal-only with no public observability exposure.
+  - Explicit Step 4 non-goals are documented (no public observability API, no UI logs, no telemetry pipeline, no audit persistence, no public state exposure).
+  - `/api/chat` request/response contract remains unchanged in this step.
+- **Phase 54 Step 5 summary (docs-only closeout):**
+  - Phase 54 Step 1-4 planning wording was verified as conceptual/internal-only and implementation-safe.
+  - DoD checklist was closed with explicit PASS status after docs synchronization checks.
+  - Guardrails remain explicit: no runtime changes, no `/api/chat` contract changes, and no new endpoints/fields.
+  - No public task/state/review/observability exposure claims were introduced in closeout wording.
+- **Phase 55 implementation focus (minimal internal-only first slice):**
+  - Internal continuation gate with deny-by-default posture so single-step remains active default behavior.
+  - Guarded bounded internal loop activation with hard cap and deterministic terminal exits.
+  - Minimal active runtime handling for step transitions (`continue`, `stop`, `fail`, `needs_review`) and timeout/cancel semantics.
+  - Minimal internal-only breadcrumb diagnostics for guarded path with no public exposure.
+  - Strict guardrails remain explicit: `/api/chat` contract unchanged, no new public endpoints/fields, no UI changes.
+- **Phase 55 Step 1 summary (implemented):**
+  - Added explicit internal continuation gate wiring from backend to assistant runtime using internal env payload only.
+  - Gate is deny-by-default and only allows continuation when explicit internal allow signal and strict preconditions are both met.
+  - Single-step execution boundary remains active baseline (`maxSteps: 1`, no chained execution).
+  - No `/api/chat` contract or endpoint changes; no public task/state/review exposure was added.
+  - UI flow remains unchanged.
+- **Phase 52 Step 1 summary (implemented):**
+  - Internal task unit envelope exists for active `/api/chat` execution path.
+  - Envelope is internal-only and non-persistent.
+  - Initial task state is minimal (`created`) and remains runtime-internal.
+  - Runtime scope safety posture remains unchanged (local-active, non-local safe fallback).
+  - `/api/chat` request/response contract remains unchanged and backward-compatible.
+- **Phase 52 Step 2 summary (implemented):**
+  - Internal task lifecycle transitions now exist with deterministic states: `created -> running -> succeeded|failed`.
+  - Success path reaches internal `succeeded` state; bounded failure path reaches internal `failed` state.
+  - Lifecycle remains internal-only and non-persistent.
+  - Provider/chat/KB runtime behavior remains functionally unchanged.
+  - `/api/chat` request/response contract remains unchanged and no public lifecycle fields are exposed.
+- **Phase 52 Step 3 summary (implemented):**
+  - Active runtime execution boundary is explicit and bounded to a single step (`maxSteps: 1`).
+  - Multi-step chaining and recursive follow-up execution are denied by internal boundary policy.
+  - Unsupported/invalid execution shape and internal preparation failures follow deterministic bounded failure handling.
+  - Provider/runtime failures remain bounded and contract-safe with internal-only lifecycle semantics.
+  - `/api/chat` public contract remains unchanged with no public task/lifecycle exposure.
+- **Reality guardrail:**
+  - No public `meta.task` or equivalent task exposure.
+  - No public `meta.state` or equivalent lifecycle exposure.
+  - No new endpoints/request keys/response fields.
+  - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
+- **Next step:**
+  - Implement Phase 55 Step 2 — Activate bounded guarded loop path.
+- **Workspace-scoped runtime core (Step 1):**
+  - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
+  - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
+  - **Purpose:** establish first implementation-safe runtime scope plumbing while preserving existing behavior.
+  - **Contract guardrail (implemented):** `/api/chat` request keys remain unchanged and scope is internal-only.
+  - **Fallback/default posture:** deterministic local fallback remains active when scoped context is missing/invalid.
+  - First slice only: runtime scope wiring exists; workspace/productization engines remain unimplemented.
+- **Scope-aware runtime hooks (Step 2):**
+  - **Current reality:** runtime remains local/non-workspace in behavior and does not expose scope publicly.
+  - **Implemented now:** assistant runtime scope handling is refactored into reusable internal hook points with deterministic local-safe guards.
+  - **Purpose:** make future scope-aware behavior guard points explicit while preserving current provider/chat/KB behavior.
+  - **Contract guardrail (implemented):** `/api/chat` request/response shape remains unchanged and no scope field is exposed in public meta.
+  - **Fallback/default posture:** invalid/missing scope input still falls back to local-safe behavior.
+  - Step 2 is internal-only hardening; no new endpoints/services/storage layers were added.
+- **Minimal scope-aware execution boundary (Step 3):**
+  - **Current reality:** local mode remains the only active behavior path; non-local runtime behavior is not implemented.
+  - **Implemented now:** assistant has explicit internal execution-boundary decision path derived from runtime scope hooks.
+  - **Boundary behavior (implemented):** local mode allows normal behavior; unknown/non-local scope fails safe to local-safe behavior without crash.
+  - **Contract guardrail (implemented):** boundary remains internal-only; no public scope field is exposed in API response/meta.
+  - **Fallback/default posture:** deterministic local-safe fallback remains active for unsupported scope modes.
+  - Step 3 is internal-only; no new endpoints/services/storage layers were added.
+- **Phase 50 planning focus:**
+  - Platform integration model for how workspace/context/agent-task/execution/audit/workflow foundations fit together in a unified boundary model.
+  - User/operator surface model for user-facing surfaces, operator/admin/review surfaces, and safe separation of normal usage vs advanced controls.
+  - Productization readiness model for capability packaging, rollout readiness, and environment/deployment/product posture alignment.
+  - Platform safety/contract/rollout model for contract-stable integration, additive/non-breaking rollout, safe fallback/default posture, and implementation-safe evolution.
+  - Planning-only guardrail: no runtime platform/productization implementation claims in this phase.
+- **Platform integration model (Step 1):**
+  - **Current reality:** runtime has no integrated platform runtime layer; foundations remain conceptual/documented only; posture remains non-integrated.
+  - **Future model (planned):** workspace/context-isolation/agent-task/execution/audit-activity/workflow-automation may later align as explicit platform runtime domains under unified integration semantics.
+  - **Purpose:** unify previously defined foundations, keep integration boundaries explicit, and support implementation-safe integration.
+  - **Contract guardrail (planned):** platform-integration semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-integrated runtime posture remains active until implementation exists.
+  - Planning only: runtime platform integration is not implemented yet.
+- **User/operator surface model (Step 2):**
+  - **Current reality:** runtime has no integrated user/operator surface-separation layer and remains in non-integrated surface posture.
+  - **Future model (planned):** platform may later expose user-facing interaction surfaces for normal usage flows and bounded operator/admin/review surfaces for advanced control workflows.
+  - **Purpose:** keep user interaction simple/safe, isolate advanced controls and review/admin capabilities, and support product-safe separation between normal usage and operator workflows.
+  - **Contract guardrail (planned):** surface-separation semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-integrated surface posture remains active until implementation exists.
+  - Planning only: runtime integrated user/operator surface separation is not implemented yet.
+- **Productization readiness + platform safety/contract/rollout (Step 3):**
+  - **Current reality:** runtime has no productization-readiness layer and no platform safety/contract/rollout layer; posture remains non-productized/non-platform.
+  - **Future productization intent (planned):** platform may later package capabilities in product-ready units, apply rollout-readiness posture, and align environment/deployment/product posture.
+  - **Future safety/contract/rollout intent (planned):** platform may later preserve contract-stable integration, additive/non-breaking rollout, safe fallback/default posture, and implementation-safe product evolution.
+  - **Purpose:** keep future productization and rollout evolution product-ready, contract-stable, additive, and safety-first.
+  - **Contract guardrail (planned):** productization-readiness and platform safety/contract/rollout semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-productized/non-platform posture remains active until implementation exists.
+  - Planning only: runtime productization-readiness and platform safety/contract/rollout are not implemented yet.
+- **Phase 49 planning focus:**
+  - Workflow unit model for future workflow creation, multi-step structure, and workflow outcome/failure states.
+  - Step orchestration model for ordered execution, dependency-aware step flow, and bounded step progression.
+  - Automation control model for approval-aware automation and retry/continue/stop behavior under safe boundaries.
+  - Workflow safety/recovery/fallback model for failure-safe recovery, deterministic fallback, partial-failure stability, and contract-stable additive evolution.
+  - Planning-only guardrail: no runtime automation/workflow implementation claims in this phase.
+- **Workflow unit model (Step 1):**
+  - **Current reality:** runtime has no workflow-unit orchestration layer and remains in non-workflow chat posture.
+  - **Future model (planned):** runtime may later create bounded workflow units, apply explicit multi-step structure semantics, and end with explicit success/failure outcome states.
+  - **Purpose:** establish bounded multi-step workflow semantics, support future workflow visibility/control, and provide stable workflow-state semantics for future automation behavior.
+  - **Contract guardrail (planned):** workflow-unit semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-workflow posture remains active until implementation exists.
+  - Planning only: runtime workflow-unit orchestration is not implemented yet.
+- **Step orchestration model (Step 2):**
+  - **Current reality:** runtime has no step-orchestration layer and remains in non-workflow chat posture.
+  - **Future model (planned):** runtime may later execute workflow steps in explicit ordered sequences, respect dependency-aware progression constraints, and enforce bounded workflow-step progression.
+  - **Purpose:** preserve predictable step order, support dependency-aware workflow flow, and keep workflow progression bounded/controlled.
+  - **Contract guardrail (planned):** orchestration semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-workflow posture remains active until implementation exists.
+  - Planning only: runtime step-orchestration is not implemented yet.
+- **Automation control + workflow safety/recovery/fallback (Step 3):**
+  - **Current reality:** runtime has no automation-control layer and no workflow safety/recovery/fallback layer; posture remains non-workflow/non-automation.
+  - **Future automation-control intent (planned):** runtime may later apply approval-aware controls, support retry/continue/stop behavior, and keep automation safe/bounded by default.
+  - **Future safety/recovery/fallback intent (planned):** runtime may later preserve failure-safe recovery, deterministic fallback/default behavior, and workflow stability during partial failure.
+  - **Purpose:** keep future automation approval-aware and controllable while preserving safety-first, failure-safe, contract-stable additive/non-breaking evolution.
+  - **Contract guardrail (planned):** automation-control and workflow safety/recovery/fallback semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-workflow/non-automation posture remains active until implementation exists.
+  - Planning only: runtime automation-control and workflow safety/recovery/fallback are not implemented yet.
+- **Phase 48 planning focus:**
+  - Activity event model for future event creation, categories, and execution/task/action event visibility.
+  - Audit trail model for traceable changes, execution history, and review/debug audit continuity.
+  - Visibility/review surface model for operator visibility, reviewable history, and safe read/inspection posture.
+  - Audit safety/retention/fallback model for audit-safe logging, retention/readback readiness, deterministic fallback, and contract stability.
+  - Planning-only guardrail: no runtime activity/audit implementation claims in this phase.
+- **Activity event model (Step 1):**
+  - **Current reality:** runtime has no activity-event creation/visibility layer and remains in non-activity posture.
+  - **Future model (planned):** runtime may later create bounded activity events, group events into explicit categories, and expose bounded execution/task/action visibility.
+  - **Purpose:** establish bounded runtime visibility semantics, support future execution/task/action trace visibility, and provide stable event semantics for future activity-aware runtime behavior.
+  - **Contract guardrail (planned):** activity-event semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-activity posture remains active until implementation exists.
+  - Planning only: runtime activity-event creation/visibility is not implemented yet.
+- **Audit trail model (Step 2):**
+  - **Current reality:** runtime has no audit-trail layer and remains in non-audit posture.
+  - **Future model (planned):** runtime may later expose traceable change events, preserve bounded execution-history semantics, and support review/debug continuity through audit-trail semantics.
+  - **Purpose:** prepare traceable runtime change history, support future execution-history continuity, and improve review/debug confidence through explicit audit semantics.
+  - **Contract guardrail (planned):** audit-trail semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-audit posture remains active until implementation exists.
+  - Planning only: runtime audit-trail implementation is not implemented yet.
+- **Visibility/review surface + audit safety/retention/fallback (Step 3):**
+  - **Current reality:** runtime has no visibility/review surface layer and no audit safety/retention/fallback layer; posture remains non-activity/non-audit.
+  - **Future visibility/review intent (planned):** runtime may later provide bounded operator visibility, reviewable execution history surfaces, and read/inspection-first non-destructive review posture.
+  - **Future audit safety/retention/fallback intent (planned):** runtime may later apply audit-safe logging posture, retention/readback readiness, and deterministic fallback/default behavior when audit context is unavailable.
+  - **Purpose:** keep future activity/audit behavior reviewable and read-safe while preserving retention-aware, failure-safe, contract-stable additive/non-breaking evolution.
+  - **Contract guardrail (planned):** visibility/review and audit safety/retention/fallback semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-activity/non-audit posture remains active until implementation exists.
+  - Planning only: runtime visibility/review and audit safety/retention/fallback implementation are not implemented yet.
+- **Phase 47 planning focus:**
+  - Execution unit model for future execution unit creation, execution scope, and result/failure outcome states.
+  - Tool capability boundary model for allowed tool categories, scope-aware boundaries, and non-destructive/default-safe tool posture.
+  - Review/approval execution flow model for review-first posture, approval checkpoints, and high-impact action gating.
+  - Execution safety/result handling model for safe result handling, deterministic fallback behavior, failure-safe outcomes, and contract stability.
+  - Planning-only guardrail: no runtime tool/action execution implementation claims in this phase.
+- **Execution unit model (Step 1):**
+  - **Current reality:** runtime has no execution-unit orchestration layer and remains in non-execution chat posture.
+  - **Future model (planned):** runtime may later create bounded execution units, run them within explicit task/workspace/project scope boundaries, and end in explicit success/failure outcome states.
+  - **Purpose:** establish bounded execution semantics, support future execution visibility/control, and provide stable execution-state semantics for future runtime behavior.
+  - **Contract guardrail (planned):** execution-unit semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-execution chat posture remains active until implementation exists.
+  - Planning only: runtime execution-unit orchestration is not implemented yet.
+- **Tool capability boundary model (Step 2):**
+  - **Current reality:** runtime has no tool-boundary enforcement layer and remains in non-execution/non-tool posture.
+  - **Future model (planned):** runtime may later constrain execution to explicit allowed tool categories with scope-aware boundaries across task/workspace/project context.
+  - **Purpose:** keep tool execution bounded and conservative, enforce scope-aware limits, and preserve non-destructive/default-safe behavior by default.
+  - **Contract guardrail (planned):** tool-boundary semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-execution/non-tool posture remains active until implementation exists.
+  - Planning only: runtime tool-boundary enforcement is not implemented yet.
+- **Review/approval flow + execution safety/result handling (Step 3):**
+  - **Current reality:** runtime has no review/approval execution-flow layer and no execution safety/result handling layer; posture remains non-execution chat behavior.
+  - **Future review/approval intent (planned):** runtime may later prioritize review-first flow, gate selected execution steps behind approval checkpoints, and require explicit approval for higher-impact actions.
+  - **Future safety/result intent (planned):** runtime may later apply safe result handling, deterministic fallback behavior, and failure-safe outcomes without destructive side effects.
+  - **Purpose:** keep future execution review-first and approval-aware while preserving safety-first behavior and contract-stable additive/non-breaking evolution.
+  - **Contract guardrail (planned):** review/approval and execution safety/result semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-execution chat posture remains active until implementation exists.
+  - Planning only: runtime review/approval flow and execution safety/result handling are not implemented yet.
+- **Phase 46 planning focus:**
+  - Task lifecycle model for future task creation, state progression, and completion/failure semantics.
+  - Agent execution posture for bounded/scoped task behavior with non-destructive/default-safe operation.
+  - Tool/action invocation model for safe boundaries and review-first execution posture.
+  - Safety/approval/fallback planning with approval gates, failure-safe handling, and contract-stability guardrails.
+  - Planning-only guardrail: no runtime task/agent implementation claims in this phase.
+- **Task lifecycle model (Step 1):**
+  - **Current reality:** runtime has no task lifecycle orchestration layer and remains in request/response non-task chat posture.
+  - **Future model (planned):** runtime may later create bounded tasks, move tasks through deterministic lifecycle stages, and end tasks in explicit success/failure terminal states.
+  - **Purpose:** establish bounded-task runtime semantics, support future task visibility with controlled execution flow, and provide stable state semantics for future agent/task behavior.
+  - **Contract guardrail (planned):** task lifecycle semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-task chat posture remains active until implementation exists.
+  - Planning only: runtime task lifecycle orchestration is not implemented yet.
+- **Agent execution posture (Step 2):**
+  - **Current reality:** runtime has no bounded agent-execution layer and remains in non-agent chat-response posture.
+  - **Future model (planned):** assistant may later execute only within explicit task boundaries and remain constrained by task/workspace/project scope.
+  - **Purpose:** keep future execution bounded and scope-aware, preserve safe/non-destructive defaults, and prepare agent/task runtime evolution without destabilizing current chat behavior.
+  - **Contract guardrail (planned):** execution posture semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-agent chat posture remains active until implementation exists.
+  - Planning only: runtime agent execution posture is not implemented yet.
+- **Tool/action invocation + safety/approval/fallback (Step 3):**
+  - **Current reality:** runtime has no task-agent tool/action orchestration layer and no approval/fallback layer; posture remains non-agent/non-task chat execution.
+  - **Future tool/action intent (planned):** runtime may later select tools/actions from bounded task intent under safe invocation boundaries with review-first posture before higher-impact execution.
+  - **Future safety/fallback intent (planned):** runtime may later apply approval gates, deterministic fallback behavior for incomplete/unsafe context, and failure-safe handling without destructive side effects.
+  - **Purpose:** keep future invocation bounded/scope-aware, make safety controls explicit, and preserve contract-stable additive/non-breaking evolution for agent/task capabilities.
+  - **Contract guardrail (planned):** invocation and safety/approval semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-agent/non-task chat posture remains active until implementation exists.
+  - Planning only: runtime tool/action invocation and approval/fallback handling are not implemented yet.
+- **Phase 45 planning focus:**
+  - Runtime KB isolation enforcement model for workspace/project-scoped KB resolution boundaries.
+  - Runtime memory isolation enforcement model for workspace/project-scoped memory continuity boundaries.
+  - Runtime config isolation enforcement model for workspace/project-scoped config ownership boundaries.
+  - Isolation enforcement safety/fallback planning with migration-safe rollout and contract-stability guardrails.
+  - Planning-only guardrail: no runtime isolation enforcement implementation claims in this phase.
+- **Runtime KB isolation enforcement model (Step 1):**
+  - **Current reality:** runtime has no KB isolation enforcement layer and remains in non-isolated KB posture.
+  - **Future model (planned):** runtime may later resolve KB by active workspace boundary and optionally narrow by active project context.
+  - **Purpose:** prevent cross-workspace KB leakage, prevent unrelated project KB mixing, and support collaboration-safe/workspace-aware context loading.
+  - **Contract guardrail (planned):** KB access boundaries remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-isolated KB posture remains active until implementation exists.
+  - Planning only: runtime KB isolation enforcement is not implemented yet.
+- **Runtime memory isolation enforcement model (Step 2):**
+  - **Current reality:** runtime has no memory isolation enforcement layer and remains in non-isolated memory posture.
+  - **Future model (planned):** runtime may later resolve memory by active workspace boundary and optionally narrow by active project context.
+  - **Purpose:** prevent cross-workspace conversation/task memory leakage, prevent unrelated project memory carryover, and support collaboration-safe/workspace-aware memory continuity.
+  - **Contract guardrail (planned):** memory continuity boundaries remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-isolated memory posture remains active until implementation exists.
+  - Planning only: runtime memory isolation enforcement is not implemented yet.
+- **Runtime config isolation + enforcement safety/fallback (Step 3):**
+  - **Current reality:** runtime has no config isolation enforcement layer and no isolation safety/fallback layer; posture remains non-isolated/local-global.
+  - **Future config intent (planned):** runtime may later resolve config by active workspace boundary and optionally narrow by active project context under config ownership boundaries.
+  - **Future safety/fallback intent (planned):** isolation adoption should be safe, fallback-aware, migration-safe, contract-stable, and additive/non-breaking.
+  - **Contract guardrail (planned):** config ownership/isolation semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current non-isolated/local-global posture remains active until implementation exists.
+  - Planning only: runtime config isolation enforcement and isolation safety/fallback are not implemented yet.
+- **Phase 44 planning focus:**
+  - Runtime membership resolution model for active user membership, workspace membership lookup, and role-aware runtime identity.
+  - Multi-user context access model for shared workspace/project context access under role boundaries.
+  - Runtime permission enforcement readiness and session/access continuity readiness planning.
+  - Planning-only guardrail: no runtime multi-user implementation claims in this phase.
+- **Runtime membership resolution model (Step 1):**
+  - **Current reality:** runtime remains single-user/local; runtime membership resolution layer is not implemented.
+  - **Future model (planned):** runtime may later resolve active user membership and bind user to workspace role via membership lookup.
+  - **Purpose:** identify active workspace membership, support role-aware runtime behavior, and provide future basis for collaboration-safe access decisions.
+  - **Contract guardrail (planned):** role-aware identity remains runtime-internal and is not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current single-user/local posture remains active until implementation exists.
+  - Planning only: runtime membership resolution is not implemented yet.
+- **Multi-user context access model (Step 2):**
+  - **Current reality:** runtime has no multi-user context access model and remains single-user/local for context access.
+  - **Future model (planned):** workspace members may later access shared workspace context under role boundaries; project-context access may later be nested inside workspace boundary.
+  - **Purpose:** allow shared workspace/project context access while preserving role-bound boundaries and preventing cross-context leakage.
+  - **Contract guardrail (planned):** access semantics remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current single-user/local posture remains active until implementation exists.
+  - Planning only: runtime multi-user context access is not implemented yet.
+- **Permission enforcement + session/access readiness (Step 3):**
+  - **Current reality:** runtime has no multi-user permission enforcement layer and no multi-user session/access continuity layer; posture remains single-user/local.
+  - **Future permission intent (planned):** runtime may later apply owner/member/viewer-aware access decisions, safe permission checks, and collaboration-safe permission-aware behavior.
+  - **Future continuity intent (planned):** membership/access continuity may later persist across sessions with safe transition from current single-user/local posture.
+  - **Contract guardrail (planned):** permission/access decisions remain runtime-internal and are not part of current `/api/chat` contract.
+  - **Fallback/default posture:** current single-user/local posture remains active until implementation exists.
+  - Planning only: runtime permission enforcement and session/access continuity are not implemented yet.
+- **Phase 43 planning focus:**
+  - Workspace state persistence model for future runtime readiness.
+  - Project context persistence model for future project-scoped assistant continuity.
+  - Scoped context persistence model for scoped KB/memory/config.
+  - Persistence safety/migration readiness planning with backward-compatibility and contract-stability guardrails.
+  - Planning-only guardrail: no runtime persistence implementation claims in this phase.
+- **Workspace state persistence model (Step 1):**
+  - **Current reality:** runtime remains in local/global persistence posture; workspace-state persistence runtime is not implemented.
+  - **Future model (planned):** workspace state may later persist independently of local session state.
+  - **Settings/ownership continuity (planned):** workspace settings/ownership context may later persist as part of runtime state.
+  - **Purpose:** preserve workspace-level continuity and support future hosted/workspace-aware runtime with stable workspace ownership/settings context.
+  - **Fallback/default posture:** current local/global persistence posture remains active until implementation exists.
+  - Planning only: runtime workspace-state persistence is not implemented yet.
+- **Project context persistence model (Step 2):**
+  - **Current reality:** runtime has no project-context persistence model and remains in local/global persistence posture.
+  - **Future model (planned):** project context may later persist inside workspace boundary.
+  - **Project continuity semantics (planned):** project-scoped assistant context continuity may later persist across runtime sessions.
+  - **Purpose:** preserve project-level assistant continuity, support future project-aware workspace runtime, and reduce unrelated context carryover across projects.
+  - **Fallback/default posture:** current local/global persistence posture remains active until implementation exists.
+  - Planning only: runtime project-context persistence is not implemented yet.
+- **Scoped context persistence + migration readiness (Step 3):**
+  - **Current reality:** scoped KB/memory/config persistence is not implemented; persistence posture remains local/global; no migration/runtime persistence rollout layer exists.
+  - **Future scoped persistence intent (planned):** scoped KB, scoped memory, and scoped config may later persist by workspace/project boundary with boundary alignment to workspace/project isolation model.
+  - **Future migration readiness intent (planned):** persistence rollout should be staged, migration-safe, backward-compatible, locally continuous, and additive/non-breaking.
+  - **Fallback/default posture:** current local/global persistence posture remains active until scoped persistence and migration implementation exists.
+  - Planning only: runtime scoped persistence and migration/rollout implementation are not implemented yet.
+- **Phase 42 planning focus:**
+  - Hosted deployment posture where local-first remains supported and hosted/cloud becomes a future option.
+  - Conceptual hosted service boundary model across UI, backend/API, assistant runtime, providers, and persistence/context layer.
+  - Workspace persistence readiness and hosted rollout safety/migration continuity planning.
+  - Planning-only guardrail: no hosted runtime implementation claims in this phase.
+- **Hosted deployment model (Step 1):**
+  - **Current reality:** runtime remains local-first; hosted/cloud runtime mode is not implemented.
+  - **Future model (planned):** hosted/cloud becomes a deployment option while local-first remains supported.
+  - **Purpose:** enable future SaaS posture while preserving local continuity and API/contract stability across deployment modes.
+  - **Semantics (planned):** local and hosted are deployment modes, not different product contracts; hosted posture must remain additive and non-breaking.
+  - **Fallback/default posture:** local-first runtime remains active until hosted runtime implementation exists.
+  - Planning only: runtime hosted/cloud deployment is not implemented yet.
+- **Service boundary model (Step 2):**
+  - **Current reality:** stack remains under local deployment assumptions with no hosted service-boundary enforcement/runtime separation.
+  - **Future model (planned):** boundary roles are explicit: UI as client surface, backend/API as contract gateway, assistant runtime as execution layer, providers as model connectors, persistence/context as hosted state boundary.
+  - **Purpose:** keep hosted architecture modular, preserve contract safety, and support staged migration from local to hosted posture.
+  - **Fallback/default posture:** current local deployment assumptions remain active until hosted boundary implementation exists.
+  - Planning only: hosted service-boundary implementation is not implemented yet.
+- **Workspace persistence + rollout readiness (Step 3):**
+  - **Current reality:** persistence remains local/global posture; no hosted persistence model or hosted rollout/migration runtime layer exists.
+  - **Future persistence intent (planned):** hosted mode may later require persistence for workspace state, project context, and scoped KB/memory/config with workspace/project boundary alignment.
+  - **Future rollout intent (planned):** hosted introduction should be staged, contract-stable, migration-safe, locally continuous, and additive/non-breaking.
+  - **Fallback/default posture:** current local-first persistence/rollout posture remains active until scoped implementation exists.
+  - Planning only: runtime hosted persistence and rollout implementation are not implemented yet.
+- **Phase 41 planning focus:**
+  - Membership collaboration model inside workspace role boundaries.
+  - Shared workspace context model for future project/KB/collaboration surfaces.
+  - Collaboration-safe actions and auditability/activity readiness planning with strict runtime-safety wording.
+- **Membership collaboration model (Step 1):**
+  - **Current reality:** runtime is single-user/local with no active multi-user membership layer.
+  - **Future model (planned):** workspace can include multiple users, each with role-attached membership (`owner` / `member` / `viewer`).
+  - **Purpose:** enable shared workspace collaboration with clear role-based participation boundaries.
+  - **Fallback/default posture:** current local/single-user runtime behavior remains active until implementation exists.
+  - Planning only: runtime membership collaboration is not implemented yet.
+- **Shared workspace context model (Step 2):**
+  - **Current reality:** context remains local/global and single-user in runtime.
+  - **Future model (planned):** workspace members may share project context, KB context, and collaboration surfaces inside workspace boundary.
+  - **Nested context semantics (planned):** project context remains nested inside workspace context; future access follows role boundaries.
+  - **Purpose:** enable aligned collaboration and reduce fragmented context across collaborators.
+  - **Fallback/default posture:** current local/global single-user context behavior remains active until implementation exists.
+  - Planning only: runtime shared workspace context is not implemented yet.
+- **Collaboration-safe actions + auditability readiness (Step 3):**
+  - **Current reality:** helpers/actions remain single-user/local; no multi-user action enforcement or activity/audit layer exists.
+  - **Future action intent (planned):** shared actions later follow role boundaries and remain permission-aware, reviewable, and reversible.
+  - **Future audit/activity intent (planned):** collaboration may later expose activity visibility and traceable shared changes in an additive, contract-safe way.
+  - **Fallback/default posture:** current helper/action behavior remains single-user/local until scoped implementation exists.
+  - Planning only: runtime collaboration enforcement and audit/activity features are not implemented yet.
+- **Current runtime reality (must remain explicit):**
+  - single-user local runtime
+  - global/local KB + memory assumptions
+  - no runtime collaboration/membership layer yet
+- **Next step:**
+  - Implement Phase 55 Step 2 — Activate bounded guarded loop path.
+
+## 4) Important rules
+- Do not change `/api/chat` contract shape/keys unless explicitly requested.
+- Prefer UI-only changes unless scope explicitly requires backend/assistant work.
+- Do not invent file paths/endpoints/components.
+- If uncertain, respond with: `UNKNOWN PATH/ENDPOINT — need repo context`.
+
+## 5) Important files
+- `apps/ui/src/App.jsx`
+- `server.js`
+- `apps/assistant/rez-ai.js`
+- `scripts/kb_build.js`
+- `data/kb/`
+- `docs/REZ_AI_MASTER_PLAN.md`
+- `docs/REZ_AI_UI_PROGRESS.md`
+- `docs/REZ_AI_CONTEXT.md`
+
+## 6) Development workflow
+- ChatGPT provides step instructions.
+- User forwards instructions to Cursor.
+- Cursor implements changes in repo.
+- User returns results/feedback to ChatGPT for next step.
+
+## 7) Current runtime/status (audit-backed)
+- UI live.
+- Backend live.
+- LM Studio live.
+- Ollama live.
+- `/api/chat` end-to-end flow live.
+- KB pipeline live (`scripts/kb_build.js` -> `data/cache/kb.json` + `data/cache/kb_vectors.json`).
+- Semantic KB retrieval is heuristic/deterministic (not provider embedding API-based).
+- Manual refresh workflow: append via `/api/kb/append` (writes `data/kb/notes.txt`), then run `npm run kb:build`; no auto-rebuild.
+- Under concurrency, `assistant_busy` can occur (soft retry path).
+
+## 8) Future roadmap direction
+- **Phase 33 (completed):** `Repo-aware Dev Assistant (Current Stack)` with DoD closeout logged in docs.
+- **Phase 34 (completed):** `KB/RAG Quality Upgrade (Current Stack)` with DoD closeout logged in docs.
+- **Phase 35 (completed):** `Tool / Automation Layer (Current Stack)` with DoD closeout logged in docs.
+- **Phase 36 (completed):** `Identity / Entitlement Foundation (Current Stack)` with DoD closeout logged in docs.
+- **Phase 37 (completed):** `Business / Billing Foundation (Current Stack)` with DoD closeout logged in docs.
+- **Phase 38 (completed):** `Multi-User / Workspace Foundation (Current Stack)` with DoD closeout logged in docs.
+- **Phase 39 (completed):** `Context Isolation Foundation (Current Stack)` with DoD closeout logged in docs.
+- **Phase 40 (completed):** `Workspace Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- **Phase 41 (completed):** `Collaboration Layer (Current Stack)` with DoD closeout logged in docs.
+- **Phase 42 (completed):** `Hosted / Cloud Mode Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 42 closeout: hosted deployment, service boundaries, persistence readiness, and rollout safety docs are completed as planning groundwork.
+- **Phase 43 (completed):** `Workspace Persistence Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 43 closeout: workspace/project/scoped context persistence and migration-readiness docs are completed as planning groundwork.
+- **Phase 44 (completed):** `Multi-User Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 44 closeout: runtime membership, context access, permission readiness, and session/access continuity docs are completed as planning groundwork.
+- **Phase 45 (completed):** `Workspace Context Isolation Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 45 closeout: runtime KB/memory/config isolation and enforcement safety/fallback docs are completed as planning groundwork.
+- Reality guardrail: runtime isolation enforcement is not implemented yet; closeout is docs-only.
+- **Phase 46 (completed):** `Agent / Task Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 46 closeout: task lifecycle, agent execution posture, tool/action invocation, and safety/approval/fallback docs are completed as planning groundwork.
+- Reality guardrail: runtime task/agent execution is not implemented yet; closeout is docs-only.
+- **Phase 47 (completed):** `Tool / Execution Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 47 closeout: execution unit model, tool capability boundaries, review/approval flow, and execution safety/result handling docs are completed as planning groundwork.
+- Reality guardrail: runtime tool/action execution is not implemented yet; closeout is docs-only.
+- **Phase 48 (completed):** `Activity / Audit Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 48 closeout: activity event model, audit trail model, visibility/review surface model, and audit safety/retention/fallback docs are completed as planning groundwork.
+- Reality guardrail: runtime activity/audit implementation is not implemented yet; closeout is docs-only.
+- **Phase 49 (completed):** `Automation / Workflow Runtime Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 49 closeout: workflow-unit model, step-orchestration model, automation-control model, and workflow safety/recovery/fallback model docs are completed as planning groundwork.
+- Reality guardrail: runtime workflow-unit/orchestration/automation-control/safety-recovery-fallback implementation is not implemented yet; closeout is docs-only.
+- **Phase 50 (completed):** `Platform Integration / Productization Foundation (Current Stack)` with DoD closeout logged in docs.
+- Phase 50 closeout: platform integration model, user/operator surface model, productization readiness model, and platform safety/contract/rollout model docs are completed as planning groundwork.
+- Reality guardrail: runtime platform-integration/user-operator-separation/productization/safety-rollout implementation is not implemented yet; closeout is docs-only.
+- **Phase 51 (completed):** `Workspace-Scoped Runtime Core (First Implementation)` with DoD closeout logged in docs.
+- Phase 51 closeout: internal runtime scope resolver, deterministic local fallback, backend->assistant scope wiring, scope-aware runtime hooks, and minimal scope-aware execution boundary are implemented as internal runtime plumbing.
+- Reality guardrail: scope remains internal-only; no `/api/chat` contract changes and no workspace/workflow/permissions/audit/billing runtime engines are implemented yet.
+- **Phase 52 (completed):** `Task / Execution Runtime Engine (First Active Runtime)` with DoD closeout logged in docs.
+- Phase 52 closeout: internal task envelope, deterministic lifecycle (`created/running/succeeded/failed`), bounded single-step execution (`maxSteps: 1`), and deterministic bounded failure handling are implemented with internal-only exposure.
+- Reality guardrail: no public `meta.task`/`meta.state` exposure, no `/api/chat` contract change, and no new endpoint/service/storage surface added in this closeout.
+- Constraints: keep architecture stable and `/api/chat` contract unchanged unless explicitly changed in a future scoped phase.

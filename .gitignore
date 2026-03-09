@@ -1,0 +1,16 @@
+# models / large files
+models/
+*.gguf
+*.bin
+
+# local configs / secrets
+.env
+.env.local
+apps/ui/.env.local
+configs/local/
+data/cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
