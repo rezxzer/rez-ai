@@ -35,7 +35,7 @@ Backend (server.js)
 Assistant (rez-ai.js)
 → builds messages array
 → optional KB inject
-→ calls selected provider runtime (LM Studio / Ollama; remote_openai placeholder)
+→ calls selected provider runtime (LM Studio working / Ollama env-dependent; remote_openai disabled stub)
 → writes cache
 → prints stdout
 
@@ -6438,7 +6438,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next phase roadmap after Phase 56 closeout
+→ Define next cleanup or hardening slice after Phase 57 provider stabilization
 
 ---
 

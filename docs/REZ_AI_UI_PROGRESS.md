@@ -772,6 +772,25 @@ How to verify:
 - `CURRENT NEXT STEP` no longer points to an unfinished Phase 56 step.
 Date: 2026-03-09
 
+### PHASE 57 — Provider layer cleanup and stabilization (mini-phase)
+Status: DONE
+Files touched:
+- apps/ui/src/App.jsx
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Provider selector is deterministic local-only: selectable providers are now only `lmstudio` and `ollama`.
+- `remote_openai` is explicitly represented as disabled/not implemented in provider panel copy (no selectable UI path).
+- Ambiguous provider wording was removed from active provider UX copy (`soon` / cloud-provider visibility wording).
+- Backend/assistant provider dispatch behavior remains unchanged and deterministic.
+How to verify:
+- Confirm UI provider options show only LM Studio + Ollama.
+- Confirm provider panel shows Remote OpenAI disabled/not implemented status.
+- Confirm `/api/chat` success/failure contract shape is unchanged.
+- Confirm explicit `provider=remote_openai` path remains intentionally not implemented.
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
@@ -940,16 +959,16 @@ How to verify:
 - Confirm response contract shape remains unchanged (`ok/reply/meta` on success, `ok/error/meta` on failures).
 Date: 2026-03-02
 
-### PHASE 6 Step 3 — Cloud compute soft toggle + provider compatibility
+### PHASE 6 Step 3 — Provider visibility soft toggle + provider compatibility (historical)
 Status: DONE
 Files touched:
 - apps/ui/src/App.jsx
 - docs/REZ_AI_UI_PROGRESS.md
 How to verify:
-- In Provider section, toggle `Cloud compute` Off/On and confirm provider options update immediately.
-- With `Cloud compute` Off, confirm cloud provider option is hidden and current provider safely stays on local option (LM Studio/Ollama).
-- With `Cloud compute` On, confirm cloud provider option appears again without affecting local provider availability.
-- Confirm LM Studio and Ollama chats remain functional regardless of cloud toggle state.
+- Historical verification at implementation time: provider visibility toggle updated option list predictably.
+- Current runtime reality (Phase 57 cleanup): visibility toggle is removed; selector is deterministic local-only (`lmstudio` / `ollama`).
+- `remote_openai` remains disabled/not implemented and is not exposed as selectable UI provider.
+- LM Studio and Ollama chat paths remain functional under unchanged `/api/chat` contract.
 Date: 2026-03-02
 
 ### PHASE 6 DoD — PASS
@@ -962,7 +981,7 @@ Files touched:
 How to verify:
 - Confirm `Plan mode` (`Free/Pro`) persists across refresh and soft-gates advanced workflow buttons without blocking chat.
 - Confirm `/api/chat` propagation is additive only: `meta.planMode` is returned and `usage.jsonl` entries include `planMode`.
-- Confirm `Cloud compute` toggle updates provider visibility predictably and safely falls back to a local provider when cloud option is hidden.
+- Confirm provider selector remains deterministic local-only (`lmstudio` / `ollama`) and fallback behavior stays stable.
 - Confirm LM Studio/Ollama chat flow remains usable and response contract shape stays unchanged.
 Date: 2026-03-02
 
@@ -1668,7 +1687,7 @@ Date: 2026-03-02
 - docs/REZ_AI_UI_PROGRESS.md
 
 ### Visual Test (Use KB ON/OFF)
-- **ON:** toggle `Use KB (soon)` and ask a KB-specific question (e.g., about local-first architecture). Answer should include KB-aligned details/source-backed phrasing.
+- **ON:** toggle `Use KB (manual refresh)` and ask a KB-specific question (e.g., about local-first architecture). Answer should include KB-aligned details/source-backed phrasing.
 - **OFF:** ask the same question with KB disabled. Answer should be more generic and not reflect injected KB context.
 
 ## Milestone M2.1 — Backend Hardening (Implemented)
@@ -1990,13 +2009,13 @@ Audit correction note (current runtime reality, history preserved):
 - UI now has provider selector in sidebar (near Model stats):
   - LM Studio
   - Ollama
-  - Remote OpenAI (soon)
-- If the non-implemented provider (`remote_openai`) is selected, UI shows a friendly not-implemented message.
+  - Remote OpenAI (disabled / not implemented)
+- Non-implemented provider path (`remote_openai`) is represented as disabled in provider status copy.
 
 ### Provider List (M7.1)
 - `lmstudio` (working)
 - `ollama` (working when local Ollama is reachable)
-- `remote_openai` (stub / soon)
+- `remote_openai` (stub / disabled / not implemented)
 
 ### Files Changed (M7.1)
 - apps/assistant/providers/index.js
@@ -2011,9 +2030,9 @@ Audit correction note (current runtime reality, history preserved):
 
 ### Manual Tests (M7.1)
 - Select **LM Studio** provider and send message; verify normal response flow unchanged.
-- Select **Ollama (soon)** or **Remote OpenAI (soon)** and send message:
-  - verify friendly "not implemented yet" error appears
-  - app remains stable (no crash, no stuck loading)
+- Select **Ollama** and send message; verify provider-path behavior is env-dependent and stable.
+- Trigger `remote_openai` path intentionally (API/manual payload) and verify stable not-implemented behavior.
+- Confirm app remains stable (no crash, no stuck loading) when provider path fails.
 - Switch provider back to **LM Studio** and verify chat works again immediately.
 
 ## M6.1 — Global Provider + Model Selector (Implemented)

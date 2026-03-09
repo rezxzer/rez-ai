@@ -5,8 +5,7 @@ import { STORAGE_KEY, loadPersistedState, savePersistedState } from './lib/persi
 
 const PROVIDERS = [
   { id: 'lmstudio', label: 'LM Studio' },
-  { id: 'ollama', label: 'Ollama' },
-  { id: 'remote_openai', label: 'Remote OpenAI (soon)' }
+  { id: 'ollama', label: 'Ollama' }
 ]
 const LOCAL_PROVIDER_IDS = ['lmstudio', 'ollama']
 const DEFAULT_FALLBACK_ORDER = ['lmstudio', 'ollama']
@@ -455,10 +454,16 @@ function App() {
   const [lastKbEnabled, setLastKbEnabled] = useState(false)
   const [lastKBCitations, setLastKBCitations] = useState([])
   const [lastKBTopK, setLastKBTopK] = useState(4)
-  const [providerId, setProviderId] = useState(() => localStorage.getItem('rez-ai-provider-v1') || 'lmstudio')
+  const [providerId, setProviderId] = useState(() => {
+    try {
+      const raw = String(localStorage.getItem('rez-ai-provider-v1') || '').trim().toLowerCase()
+      return LOCAL_PROVIDER_IDS.includes(raw) ? raw : 'lmstudio'
+    } catch {
+      return 'lmstudio'
+    }
+  })
   const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem('rez-ai-model-v1') || '')
   const [planMode, setPlanMode] = useState(() => localStorage.getItem('rez-ai-plan-mode-v1') || 'free')
-  const [cloudEnabled, setCloudEnabled] = useState(() => localStorage.getItem('rez-ai-cloud-enabled-v1') === '1')
   const [providerFallbackOrder, setProviderFallbackOrder] = useState(() => {
     try {
       const raw = localStorage.getItem(FALLBACK_ORDER_KEY)
@@ -719,7 +724,7 @@ function App() {
   })
   const providerLabel = useMemo(() => {
     const match = PROVIDERS.find((p) => p.id === providerId)
-    return match ? match.label.replace(' (soon)', '') : providerId
+    return match ? match.label : providerId
   }, [providerId])
   const isProMode = planMode === 'pro'
   const planEntitlementHint = isProMode
@@ -728,9 +733,7 @@ function App() {
   const planGateTooltip = isProMode
     ? 'Enabled in local Pro simulation.'
     : 'Local plan simulation only: switch Plan mode to Pro.'
-  const visibleProviders = useMemo(() => (
-    cloudEnabled ? PROVIDERS : PROVIDERS.filter((p) => p.id !== 'remote_openai')
-  ), [cloudEnabled])
+  const visibleProviders = useMemo(() => PROVIDERS, [])
   const isProviderUnreachable = healthUi.kind === 'warn' && String(healthUi.text || '').includes('Unreachable')
   const suggestedFallbackProvider = useMemo(() => {
     if (!isProviderUnreachable) return null
@@ -741,13 +744,12 @@ function App() {
   const suggestedFallbackLabel = useMemo(() => {
     if (!suggestedFallbackProvider) return null
     const match = PROVIDERS.find((p) => p.id === suggestedFallbackProvider)
-    return match ? match.label.replace(' (soon)', '') : suggestedFallbackProvider
+    return match ? match.label : suggestedFallbackProvider
   }, [suggestedFallbackProvider])
   const currentModelLabel = useMemo(() => {
     if (lastModelName) return lastModelName
     if (selectedModel) return selectedModel
     if (providerId === 'ollama') return lastModelName || ollamaModelLabel
-    if (providerId === 'remote_openai') return lastModelName || 'remote-openai'
     return healthUi.modelHint || lastModelName || fallbackModelLabel
   }, [selectedModel, providerId, healthUi.modelHint, lastModelName])
   const visibleCitations = useMemo(() => {
@@ -965,7 +967,7 @@ function App() {
       })
     }
     if (modelsError) {
-      const fallbackLabel = PROVIDERS.find((p) => p.id === providerFallbackOrder[0])?.label?.replace(' (soon)', '') || providerFallbackOrder[0]
+      const fallbackLabel = PROVIDERS.find((p) => p.id === providerFallbackOrder[0])?.label || providerFallbackOrder[0]
       hints.push({
         id: 'models-list-error',
         text: `Model list fetch failed. Suggest switching to fallback primary (${fallbackLabel}).`,
@@ -1661,9 +1663,6 @@ function App() {
   }, [planMode])
 
   useEffect(() => {
-    localStorage.setItem('rez-ai-cloud-enabled-v1', cloudEnabled ? '1' : '0')
-  }, [cloudEnabled])
-  useEffect(() => {
     localStorage.setItem(FALLBACK_ORDER_KEY, JSON.stringify(normalizeFallbackOrder(providerFallbackOrder)))
   }, [providerFallbackOrder])
   useEffect(() => {
@@ -1867,12 +1866,6 @@ function App() {
       return next.slice(-6)
     })
   }, [assuranceConvergenceRollup])
-
-  useEffect(() => {
-    if (!cloudEnabled && providerId === 'remote_openai') {
-      setProviderId('lmstudio')
-    }
-  }, [cloudEnabled, providerId])
 
   // Load available models whenever provider changes
   useEffect(() => {
@@ -3428,17 +3421,8 @@ function App() {
         <div className="sidebar-section">
           <h3 className="section-title">PROVIDER</h3>
           <div className="model-select-card" style={{ marginBottom: 10 }}>
-            <label className="model-select-label" htmlFor="cloud-compute-toggle">Cloud compute</label>
-            <select
-              id="cloud-compute-toggle"
-              className="model-select"
-              value={cloudEnabled ? 'on' : 'off'}
-              onChange={(e) => setCloudEnabled(e.target.value === 'on')}
-            >
-              <option value="off">Off</option>
-              <option value="on">On</option>
-            </select>
-            <div className="model-select-hint">Local toggle only (visibility/availability).</div>
+            <label className="model-select-label">Remote OpenAI</label>
+            <div className="model-select-hint">Disabled — not implemented.</div>
           </div>
           <div className="provider-card">
             {visibleProviders.map((p) => (
@@ -3462,7 +3446,7 @@ function App() {
             >
               {LOCAL_PROVIDER_IDS.map((id) => {
                 const p = PROVIDERS.find((x) => x.id === id)
-                const label = p ? p.label.replace(' (soon)', '') : id
+                const label = p ? p.label : id
                 return <option key={id} value={id}>{label}</option>
               })}
             </select>
@@ -3475,7 +3459,7 @@ function App() {
             >
               {LOCAL_PROVIDER_IDS.map((id) => {
                 const p = PROVIDERS.find((x) => x.id === id)
-                const label = p ? p.label.replace(' (soon)', '') : id
+                const label = p ? p.label : id
                 return <option key={id} value={id}>{label}</option>
               })}
             </select>
@@ -4174,8 +4158,8 @@ function App() {
               <span className="status-dot" />
               {healthUi.text}
             </div>
-            <button className="btn-ghost" disabled>Settings (soon)</button>
-            <button className="btn-ghost" disabled>Export (soon)</button>
+            <button className="btn-ghost" disabled>Settings (disabled)</button>
+            <button className="btn-ghost" disabled>Export (disabled)</button>
           </div>
         </header>
 
