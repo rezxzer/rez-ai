@@ -6324,12 +6324,13 @@ Phase 56 is DONE only if all pass:
 - [x] Deterministic precedence ordering is active in guarded transition policy path.
 - [x] Unknown/invalid transition outcomes map to bounded fail-terminal behavior deterministically.
 - [x] Transition decision breadcrumbs are aligned and remain internal-only.
+- [x] Guarded timeout/cancel resilience checkpoints enforce deterministic precedence and block continuation under cancel/budget exhaustion.
 - [ ] `/api/chat` contract and endpoint surface remain unchanged.
 - [ ] No public task/state/review/observability exposure exists.
 - [ ] UI flow remains unchanged.
 - [ ] Regression verification covers default single-step and guarded internal path safety.
 
-Status: In progress (Step 1 implemented)
+Status: In progress (Step 1-2 implemented)
 
 ## 56.3 Minimal Implementation Step Plan (1-4)
 
@@ -6351,15 +6352,23 @@ Manual verify:
 - Confirm transition decision breadcrumbs remain internal-only and include aligned action/terminal/policy metadata.
 - Confirm no review semantics appear in public error code/message.
 
-### Step 2 — Transition policy verification hardening pack
+### Step 2 — Timeout/cancel resilience hardening
 Current reality:
-- Initial transition policy hardening is active but requires broader matrix verification.
+- Guarded transition policy hardening is active; timeout/cancel checkpoints required stricter resilience enforcement.
 Target intent:
-- Expand guarded-path transition verification matrix across normal, override, and invalid outcome conditions.
+- Harden guarded-only timeout/cancel precedence checkpoints and continuation blocking under cancel/budget exhaustion.
 Guardrail:
-- Verification-only; no public contract expansion.
+- No public API contract changes, no endpoint additions, no UI changes, and no public review semantics in error code/message.
 Fallback/default posture:
-- Preserve bounded deterministic terminal handling on any uncertain branch.
+- Timeout/cancel paths remain deterministic bounded fail terminals and guarded continuation is denied when checkpoint rules fail.
+Implementation status:
+- Implemented in this slice (runtime + docs sync).
+Manual verify:
+- Confirm deterministic checkpoint ordering in guarded mode: cancel precedence before budget checks.
+- Confirm checkpoint coverage at `pre_step_start`, `post_step_response`, and `pre_continuation_handoff`.
+- Confirm guarded continuation is blocked when cancel is asserted or execution budget is exhausted.
+- Confirm timeout/cancel terminal mapping remains stable (`execution_timeout`, `execution_cancelled`) and public-safe.
+- Confirm no review-semantic public error code/message leakage and no public contract/endpoint/UI expansion.
 
 ### Step 3 — Internal transition diagnostics polish
 Current reality:
@@ -6410,7 +6419,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Implement Phase 56 Step 2 — Transition policy verification hardening pack
+→ Implement Phase 56 Step 3 — Internal transition diagnostics polish
 
 ---
 

@@ -674,6 +674,35 @@ How to verify:
 - Confirm no new routes/endpoints/public fields are introduced.
 Date: 2026-03-09
 
+### PHASE 56 Step 2 — Timeout/cancel resilience hardening
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Hardened guarded-only timeout/cancel resilience checkpoints with deterministic ordering at `pre_step_start`, `post_step_response`, and `pre_continuation_handoff`.
+- Enforced cancel precedence over budget checks at each guarded checkpoint.
+- Prevented continuation whenever guarded cancel is asserted or guarded execution budget is exhausted.
+- Kept timeout/cancel public terminal mapping stable and safe (`execution_timeout`, `execution_cancelled`).
+- Preserved strict guardrails: no `/api/chat` contract changes, no new endpoints, no UI changes, no public task/state/review exposure, and no public review semantics in error code/message.
+Current reality:
+- Guarded transition policy is active and now includes hardened timeout/cancel resilience checkpoints.
+Target intent:
+- Stabilize guarded runtime timing/control behavior before diagnostics polish.
+Guardrail:
+- Keep all public API/UI surfaces unchanged.
+Fallback/default posture:
+- Any guarded checkpoint cancel/budget failure triggers deterministic bounded terminal behavior.
+How to verify:
+- Confirm default deny path remains single-step (`maxSteps: 1`) and guarded allow remains bounded (`maxSteps: 2`).
+- Confirm timeout/cancel paths terminate deterministically with stable public-safe error codes/messages.
+- Confirm forced invalid transition outcome still maps to deterministic bounded fail terminal.
+- Confirm no new routes/endpoints/public fields and no review semantics in public errors.
+- Confirm docs point next step to `Implement Phase 56 Step 3 — Internal transition diagnostics polish`.
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

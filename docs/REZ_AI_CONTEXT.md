@@ -147,6 +147,7 @@ Use this as bootstrap context for new AI chats.
 - **Phase 56 implementation focus (transition-policy hardening):**
   - Strict guarded-mode-only transition policy resolver with explicit deterministic action outputs.
   - Deterministic precedence ordering for guarded transition decisions.
+  - Guarded-only timeout/cancel resilience hardening with deterministic checkpoint precedence.
   - Bounded fallback mapping for unknown/invalid outcomes.
   - Internal-only transition decision breadcrumb alignment.
   - Strict guardrails remain explicit: `/api/chat` contract unchanged, no new public endpoints/fields, no UI changes.
@@ -156,6 +157,12 @@ Use this as bootstrap context for new AI chats.
   - Aligned internal transition breadcrumbs with action/terminal/policy metadata while keeping telemetry internal-only.
   - Preserved public safety posture: no API/endpoint/UI changes, no public task/state/review exposure, and no public review semantics in error code/message.
   - Single-step default path remains unchanged and guarded mode remains internal-only and bounded.
+- **Phase 56 Step 2 summary (implemented):**
+  - Hardened guarded-only timeout budget checkpoints with deterministic coverage at `pre_step_start`, `post_step_response`, and `pre_continuation_handoff`.
+  - Enforced cancel precedence over budget checks at each guarded checkpoint.
+  - Prevented guarded continuation whenever cancel is asserted or execution budget is exhausted.
+  - Kept timeout/cancel terminal mapping stable and public-safe (`execution_timeout`, `execution_cancelled`).
+  - Preserved strict guardrails: `/api/chat` contract unchanged, no new endpoints/fields, no public task/state/review exposure, no public review semantics, and no UI changes.
 - **Phase 52 Step 1 summary (implemented):**
   - Internal task unit envelope exists for active `/api/chat` execution path.
   - Envelope is internal-only and non-persistent.
@@ -180,7 +187,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Implement Phase 56 Step 2 — Transition policy verification hardening pack.
+  - Implement Phase 56 Step 3 — Internal transition diagnostics polish.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
@@ -473,7 +480,7 @@ Use this as bootstrap context for new AI chats.
   - global/local KB + memory assumptions
   - no runtime collaboration/membership layer yet
 - **Next step:**
-  - Implement Phase 56 Step 2 — Transition policy verification hardening pack.
+  - Implement Phase 56 Step 3 — Internal transition diagnostics polish.
 
 ## 4) Important rules
 - Do not change `/api/chat` contract shape/keys unless explicitly requested.
