@@ -6409,6 +6409,21 @@ Manual verify:
 - Confirm UI send/receive, refresh persistence, and KB append/manual rebuild flow work with no visual contract changes.
 - Confirm no public task/state/review exposure and no endpoint expansion.
 
+### Phase 59 — REZ-AI operator mode definition and UX surface clarity (implemented)
+Current reality:
+- REZ-AI copy surface had practical capability but first impression was still generic assistant-like in key UI regions.
+Target intent:
+- Clarify UX identity so users immediately understand operator-style flow (task breakdown, context-aware planning, local/private posture).
+Guardrail:
+- No runtime behavior changes, no provider/KB algorithm changes, and no `/api/chat` public contract changes.
+Implementation status:
+- Implemented in this slice (UI copy/surface clarity + docs sync).
+Manual verify:
+- Confirm welcome/header/composer/workflow text now reflects practical operator usage.
+- Confirm preset labels/descriptions are operator-oriented while preset IDs/runtime wiring remain unchanged.
+- Confirm UI layout remains stable (copy-level polish only).
+- Confirm `/api/chat` request/response shape and endpoints remain unchanged.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6438,7 +6453,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next narrow UX hardening slice after Phase 58 KB clarity pass
+→ Define next narrow operator workflow polish slice after Phase 59 UX clarity pass
 
 ---
 

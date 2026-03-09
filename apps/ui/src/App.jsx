@@ -347,7 +347,7 @@ function App() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Welcome to REZ-AI Local Console. Backend connected to LM Studio at localhost:3001.',
+      content: 'Welcome to REZ-AI Local Operator Console.\nShare a practical goal, context, and constraints. I can help break work into executable steps, use KB context when enabled, and keep workflows local-first/private.\nBackend connected to LM Studio at localhost:3001.',
       timestamp: new Date()
     }
   ])
@@ -729,11 +729,11 @@ function App() {
   }, [providerId])
   const isProMode = planMode === 'pro'
   const planEntitlementHint = isProMode
-    ? 'Local-first plan signal: Pro (UI helper unlocks only).'
-    : 'Local-first plan signal: Free (switch to Pro for helper unlocks).'
+    ? 'Workflow mode: Pro simulation (extra drafting helpers unlocked locally).'
+    : 'Workflow mode: Free simulation (switch to Pro for extra drafting helpers).'
   const planGateTooltip = isProMode
     ? 'Enabled in local Pro simulation.'
-    : 'Local plan simulation only: switch Plan mode to Pro.'
+    : 'Local simulation only: switch workflow mode to Pro.'
   const visibleProviders = useMemo(() => PROVIDERS, [])
   const isProviderUnreachable = healthUi.kind === 'warn' && String(healthUi.text || '').includes('Unreachable')
   const suggestedFallbackProvider = useMemo(() => {
@@ -1992,12 +1992,12 @@ function App() {
 
   const getPresetWorkflowHint = (presetId) => {
     if (presetId === 'dev') {
-      return 'Style: step-by-step, code-first, mention files and tests, avoid hallucination.'
+      return 'Style: operator-grade code execution, file-level scope, and test-first validation.'
     }
     if (presetId === 'khronika') {
-      return 'Style: Next.js + Supabase, respect RLS/migrations, docs-first, prefer Georgian UI strings.'
+      return 'Style: Next.js + Supabase operator support, respect RLS/migrations, docs-first, prefer Georgian UI strings.'
     }
-    return 'Style: concise, structured, practical, safe.'
+    return 'Style: practical operator guidance, step-by-step outputs, concise and safe.'
   }
 
   const makePlanPrompt = (preset, lastText, chatMessages) => {
@@ -3357,7 +3357,7 @@ function App() {
           <h3 className="section-title">SYSTEM PROMPT</h3>
 
           <div className="preset-card">
-            <label className="preset-label">Preset</label>
+            <label className="preset-label">Operator preset</label>
             <div className="preset-list">
               {PRESETS.map((preset) => (
                 <button
@@ -3372,6 +3372,7 @@ function App() {
               ))}
             </div>
             <p className="preset-description">{activePreset.description}</p>
+            <p className="preset-hint">Use a preset plus workflow tools to draft plans, next steps, and checklists quickly.</p>
           </div>
 
           <textarea
@@ -3382,7 +3383,7 @@ function App() {
               const val = e.target.value
               setChats(prev => prev.map(c => c.id === activeChatId ? { ...c, systemPrompt: val } : c))
             }}
-            placeholder="Set system prompt..."
+            placeholder="Set system prompt / operator style..."
             rows={5}
           />
 
@@ -3407,10 +3408,10 @@ function App() {
               const val = e.target.value
               setChats(prev => prev.map(c => (c.id === activeChatId ? { ...c, notes: val } : c)))
             }}
-            placeholder="Notes for this chat (memory)..."
+            placeholder="Notes for this chat (local memory)..."
             rows={6}
           />
-          <div className="memory-hint">Saved automatically (local).</div>
+          <div className="memory-hint">Saved locally for this chat.</div>
           <div className="memory-actions">
             <button className="btn-secondary" onClick={saveNotesToKb}>
               Save to Memory
@@ -3837,9 +3838,9 @@ function App() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <h3 className="section-title">QUICK ACTIONS</h3>
+          <h3 className="section-title">OPERATOR TOOLS</h3>
           <div className="model-select-card" style={{ marginBottom: 10 }}>
-            <label className="model-select-label" htmlFor="preflight-run-btn">Preflight</label>
+            <label className="model-select-label" htmlFor="preflight-run-btn">Operator preflight</label>
             <button id="preflight-run-btn" className="btn-secondary" onClick={runPreflightChecklist}>
               Run preflight
             </button>
@@ -4069,7 +4070,7 @@ function App() {
             )}
           </div>
           <div className="model-select-card" style={{ marginBottom: 10 }}>
-            <label className="model-select-label" htmlFor="plan-mode-select">Plan mode</label>
+            <label className="model-select-label" htmlFor="plan-mode-select">Workflow mode</label>
             <select
               id="plan-mode-select"
               className="model-select"
@@ -4084,7 +4085,7 @@ function App() {
               {planEntitlementHint}
             </div>
             <div className="model-select-hint" style={{ marginTop: 4 }}>
-              Auth-aware signals are informational only; billing/entitlements are not implemented yet.
+              Informational only: workflow mode is a local UX helper, not backend entitlement logic.
             </div>
           </div>
           <div className="model-select-card" style={{ marginBottom: 10 }}>
@@ -4100,7 +4101,7 @@ function App() {
               ))}
             </select>
             <button className="btn-secondary" onClick={insertPresetToComposer}>
-              Insert Preset
+              Insert workflow preset
             </button>
           </div>
           <div className="workflow-buttons">
@@ -4108,19 +4109,19 @@ function App() {
               className="btn-secondary btn-workflow"
               onClick={() => fillWorkflowInput(makePlanPrompt(activePreset, lastUserText, messages))}
             >
-              Plan
+              Plan task
             </button>
             <button
               className="btn-secondary btn-workflow"
               onClick={() => fillWorkflowInput(makeNextStepPrompt(activePreset, lastUserText, messages))}
             >
-              Next step
+              Pick next step
             </button>
             <button
               className="btn-secondary btn-workflow"
               onClick={() => fillWorkflowInput(makeSummarizePrompt(activePreset, messages))}
             >
-              Summarize
+              Summarize work
             </button>
             <button
               className="btn-secondary btn-workflow"
@@ -4128,7 +4129,7 @@ function App() {
               disabled={!isProMode}
               title={!isProMode ? planGateTooltip : 'Extract tasks'}
             >
-              Extract tasks
+              Extract checklist
             </button>
             <button
               className="btn-secondary btn-workflow"
@@ -4136,13 +4137,13 @@ function App() {
               disabled={!isProMode}
               title={!isProMode ? planGateTooltip : 'Cursor prompt'}
             >
-              Cursor prompt
+              Create Cursor prompt
             </button>
           </div>
-          <div className="workflow-hint">Click fills input. Review/edit first, then send (no auto-run).</div>
+          <div className="workflow-hint">Buttons draft operator-ready prompts into the composer. Review/edit, then send (no auto-run).</div>
           <div className="action-buttons">
             <button className="btn-secondary btn-full" onClick={toggleStatus}>
-              Toggle Status (demo)
+              Insert status snapshot (demo)
             </button>
             <button className="btn-secondary btn-full" onClick={clearChat}>
               Clear Chat
@@ -4173,8 +4174,8 @@ function App() {
         {/* Top Header */}
         <header className="header">
           <div className="header-left">
-            <h1 className="header-title">REZ-AI Local</h1>
-            <p className="header-subtitle">UI prototype • next backend • KB/RAG</p>
+            <h1 className="header-title">REZ-AI Local Operator</h1>
+            <p className="header-subtitle">Practical task execution • KB-assisted context • local/private workflow</p>
           </div>
 
           <div className="header-right">
@@ -4268,7 +4269,7 @@ function App() {
               value={inputValue}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              placeholder="Message REZ-AI... (Enter to send, Shift+Enter for newline, Ctrl+Enter also sends)"
+              placeholder="Describe task, goal, and constraints... (Enter to send, Shift+Enter for newline, Ctrl+Enter also sends)"
               rows={1}
               disabled={isLoading}
               maxLength={MAX_MESSAGE_CHARS}
@@ -4288,13 +4289,13 @@ function App() {
           <div className="composer-hint" style={composerHintStyle}>
             {chunkProgress
               ? `Sending part ${chunkProgress.current}/${chunkProgress.total}...`
-              : `Enter to send • Shift+Enter for new line • Esc closes toast • ${inputValue.length}/${MAX_MESSAGE_CHARS} chars`}
+              : `Best signal: goal + context + constraints • Enter sends • Shift+Enter newline • Esc closes toast • ${inputValue.length}/${MAX_MESSAGE_CHARS} chars`}
           </div>
           {!chunkProgress && (
             <div className="composer-hint" style={composerHintStyle}>
               {shouldShowAdvancedComposerTools
-                ? `Prompt quality (${String(activePreset?.name || 'General')}): ${promptQualityCue}`
-                : `Prompt quality (${String(activePreset?.name || 'General')}): ${promptQualityCue} • Context hint: ${composerContextHint} • Context snapshot: ${composerContextSnapshot} • Summary: ${conversationSummary
+                ? `Operator signal (${String(activePreset?.name || 'General Operator')}): ${promptQualityCue}`
+                : `Operator signal (${String(activePreset?.name || 'General Operator')}): ${promptQualityCue} • Context hint: ${composerContextHint} • Context snapshot: ${composerContextSnapshot} • Summary: ${conversationSummary
                   ? (summaryExpanded ? conversationSummary : conversationSummaryPreview)
                   : '—'}`}
               {canShowAdvancedComposerToggle && (
@@ -4310,17 +4311,17 @@ function App() {
               {shouldShowAdvancedComposerTools && (
                 <>
                   <button className="btn-ghost" style={{ marginLeft: 8 }} onClick={insertPromptScaffold}>
-                    Insert scaffold
+                    Insert operator scaffold
                   </button>
                   <button className="btn-ghost" style={{ marginLeft: 8 }} onClick={insertWorkflowRequestHelper}>
-                    Prep workflow
+                    Draft workflow request
                   </button>
                   <button className="btn-ghost" style={{ marginLeft: 8 }} onClick={insertAnalysisRequestHelper}>
-                    Prep analysis
+                    Draft analysis request
                   </button>
                   {hasScaffoldHeaderInInput && (
                     <button className="btn-ghost" style={{ marginLeft: 8 }} onClick={clearPromptScaffold}>
-                      Clear scaffold
+                      Clear scaffold block
                     </button>
                   )}
                 </>
@@ -4333,10 +4334,10 @@ function App() {
               {composerContextHintMode === 'FOLLOW-UP' && (
                 <>
                   <button className="btn-ghost" style={{ marginLeft: 8 }} onClick={insertContextRefLine}>
-                    Insert ref
+                    Add ref line
                   </button>
                   <button className="btn-ghost" style={{ marginLeft: 8 }} onClick={insertContextPack}>
-                    Insert context
+                    Add context pack
                   </button>
                 </>
               )}
