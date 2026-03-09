@@ -19,9 +19,11 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 55 — Guarded Internal Multi-Step Runtime (Minimal First Activation)` (in progress, Step 3 implemented).
-- **Latest phase closeout:** `PHASE 54 DoD — PASS`.
+- **Current phase:** `PHASE 55 — Guarded Internal Multi-Step Runtime (Minimal First Activation)` (`PHASE 55 DoD — PASS`).
+- **Latest phase closeout:** `PHASE 55 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 55 Step 4 — Regression verification + DoD closeout + docs sync`
+  - `PHASE 55 DoD — PASS`
   - `PHASE 55 Step 3 — Runtime stability layer (transition + timeout/cancel + breadcrumbs)`
   - `PHASE 55 Step 2 — Activate bounded guarded loop path`
   - `PHASE 55 Step 1 — Implement internal continuation gate (minimal, default-safe)`
@@ -133,6 +135,13 @@ Use this as bootstrap context for new AI chats.
   - Added minimal internal-only runtime breadcrumbs for guarded path (`start/step/transition/end`), with best-effort logging only.
   - Single-step default path remains unchanged and guarded loop remains internal-only, gate-controlled, and hard-capped.
   - No `/api/chat` contract changes, no new endpoints/fields, no public task/state/review exposure, and no UI changes.
+- **Phase 55 Step 4 summary (implemented):**
+  - Verified Step 1 gate behavior: default deny remains single-step and guarded activation remains explicit internal allow + local/running precondition based.
+  - Verified Step 2 bounded behavior: guarded path remains hard-capped and deterministic.
+  - Verified Step 3 stability behavior: timeout/cancel/internal-needs-review terminals are deterministic, and public error mapping remains review-semantic free.
+  - Verified `/api/chat` request/response contract and endpoint surface remain unchanged.
+  - Verified no public task/state/review/observability exposure and no UI changes.
+  - Closed phase with explicit `PHASE 55 DoD — PASS`.
 - **Phase 52 Step 1 summary (implemented):**
   - Internal task unit envelope exists for active `/api/chat` execution path.
   - Envelope is internal-only and non-persistent.
@@ -157,7 +166,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Implement Phase 55 Step 4 — Regression verification + DoD closeout + docs sync.
+  - Define next phase roadmap after Phase 55 closeout.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
@@ -450,7 +459,7 @@ Use this as bootstrap context for new AI chats.
   - global/local KB + memory assumptions
   - no runtime collaboration/membership layer yet
 - **Next step:**
-  - Implement Phase 55 Step 4 — Regression verification + DoD closeout + docs sync.
+  - Define next phase roadmap after Phase 55 closeout.
 
 ## 4) Important rules
 - Do not change `/api/chat` contract shape/keys unless explicitly requested.

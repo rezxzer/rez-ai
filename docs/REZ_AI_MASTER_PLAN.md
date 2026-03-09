@@ -6176,12 +6176,12 @@ Phase 55 is DONE only if all pass:
 - [x] Active transition handling covers `continue/stop/fail/needs_review` with deterministic bounded behavior.
 - [x] Timeout/cancel handling is active only as internal bounded semantics (no public cancel API).
 - [x] Minimal internal breadcrumb diagnostics exist for guarded path without public exposure.
-- [ ] `/api/chat` contract and endpoint surface remain unchanged.
-- [ ] No public task/state/review/observability fields are exposed.
-- [ ] UI flow remains unchanged.
-- [ ] Regression verification covers default single-step path and guarded internal path safety.
+- [x] `/api/chat` contract and endpoint surface remain unchanged.
+- [x] No public task/state/review/observability fields are exposed.
+- [x] UI flow remains unchanged.
+- [x] Regression verification covers default single-step path and guarded internal path safety.
 
-Status: In progress (Step 1-3 implemented)
+Status: PHASE 55 DoD — PASS
 
 ## 55.3 Minimal Implementation Step Plan (1-4)
 
@@ -6241,13 +6241,22 @@ Manual verify:
 
 ### Step 4 — Regression verification + DoD closeout + docs sync
 Current reality:
-- No Phase 55 runtime regression evidence exists yet.
+- Phase 55 runtime verification evidence now exists for default and guarded paths under current internal-only scope.
 Target intent:
 - Verify guardrails and close docs with explicit PASS/NOT FULLY VERIFIED outcome based on evidence.
 Guardrail:
 - No scope expansion beyond minimal internal slice.
 Fallback/default posture:
 - If verification is partial, keep status not fully closed and preserve default single-step behavior.
+Implementation status:
+- Implemented in this slice (verification + docs closeout sync).
+Manual verify:
+- Confirm Step 1 gate behavior: default deny remains single-step and guarded path only activates with explicit internal allow + local/running preconditions.
+- Confirm Step 2 bounded behavior: guarded path remains hard-capped (`maxSteps: 2`) with deterministic terminal stop.
+- Confirm Step 3 stability behavior: timeout/cancel/internal-needs-review terminate deterministically, and public-safe error mapping remains review-semantic free.
+- Confirm `/api/chat` request/response contract is unchanged and endpoint surface is unchanged.
+- Confirm no public task/state/review/observability exposure and no UI changes.
+- Record `PHASE 55 DoD — PASS` after successful regression verification and docs synchronization.
 
 ---
 
@@ -6278,7 +6287,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Implement Phase 55 Step 4 — Regression verification + DoD closeout + docs sync
+→ Define next phase roadmap after Phase 55 closeout
 
 ---
 
