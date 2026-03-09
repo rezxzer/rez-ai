@@ -6325,12 +6325,13 @@ Phase 56 is DONE only if all pass:
 - [x] Unknown/invalid transition outcomes map to bounded fail-terminal behavior deterministically.
 - [x] Transition decision breadcrumbs are aligned and remain internal-only.
 - [x] Guarded timeout/cancel resilience checkpoints enforce deterministic precedence and block continuation under cancel/budget exhaustion.
+- [x] Guarded-only internal telemetry baseline schema is active with versioned event types and deterministic detail normalization.
 - [ ] `/api/chat` contract and endpoint surface remain unchanged.
 - [ ] No public task/state/review/observability exposure exists.
 - [ ] UI flow remains unchanged.
 - [ ] Regression verification covers default single-step and guarded internal path safety.
 
-Status: In progress (Step 1-2 implemented)
+Status: In progress (Step 1-3 implemented)
 
 ## 56.3 Minimal Implementation Step Plan (1-4)
 
@@ -6372,13 +6373,20 @@ Manual verify:
 
 ### Step 3 — Internal transition diagnostics polish
 Current reality:
-- Internal transition breadcrumbs are active with baseline policy alignment.
+- Internal transition breadcrumbs are active with baseline policy alignment and timeout/cancel checkpoint coverage.
 Target intent:
-- Tighten diagnostic consistency for transition decision/failure reason taxonomy (internal-only).
+- Implement guarded-only internal telemetry schema baseline with deterministic event typing/detail normalization (internal-only).
 Guardrail:
 - No public observability exposure.
 Fallback/default posture:
 - If diagnostic enrichment fails, runtime behavior remains deterministic and contract-safe.
+Implementation status:
+- Implemented in this slice (runtime + docs sync).
+Manual verify:
+- Confirm guarded telemetry envelope includes `schemaVersion`, canonical event `type`, and deterministic whitelisted `detail`.
+- Confirm guarded events align to schema: execution start/end, step start/end, resilience checkpoints, and transition decision.
+- Confirm telemetry remains best-effort/non-fatal and internal-only (`REZ_RUNTIME_PRINT_BREADCRUMBS=1` prints internal stderr logs only).
+- Confirm no `/api/chat` contract/endpoint/UI changes and no public review-semantic error exposure.
 
 ### Step 4 — Regression verification + DoD closeout + docs sync
 Current reality:
@@ -6419,7 +6427,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Implement Phase 56 Step 3 — Internal transition diagnostics polish
+→ Implement Phase 56 Step 4 — Regression verification + DoD closeout + docs sync
 
 ---
 

@@ -77,6 +77,38 @@ const GUARDED_TRANSITION_ACTIONS = Object.freeze({
     NEEDS_REVIEW_TERMINAL: "needs_review_terminal",
 });
 const GUARDED_TRANSITION_POLICY_VERSION = "phase56_step1";
+const GUARDED_TELEMETRY_SCHEMA_VERSION = "phase56_step3_v1";
+const GUARDED_TELEMETRY_EVENT_TYPES = Object.freeze({
+    EXECUTION_START: "guarded_execution_start",
+    STEP_START: "guarded_step_start",
+    RESILIENCE_CHECKPOINT: "guarded_resilience_checkpoint",
+    TRANSITION_DECISION: "guarded_transition_decision",
+    STEP_END: "guarded_step_end",
+    CANCEL_TERMINAL: "guarded_cancel_terminal",
+    TIMEOUT_TERMINAL: "guarded_timeout_terminal",
+    EXECUTION_END: "guarded_execution_end",
+    UNKNOWN: "guarded_unknown_event",
+});
+const GUARDED_TELEMETRY_EVENT_TYPE_SET = new Set(Object.values(GUARDED_TELEMETRY_EVENT_TYPES));
+const GUARDED_TELEMETRY_MAX_STRING_LENGTH = 160;
+const GUARDED_TELEMETRY_DETAIL_FIELDS = Object.freeze({
+    [GUARDED_TELEMETRY_EVENT_TYPES.EXECUTION_START]: Object.freeze(["maxSteps", "stepTimeoutMs", "executionTimeoutMs"]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.STEP_START]: Object.freeze(["stepIndex", "maxSteps"]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.RESILIENCE_CHECKPOINT]: Object.freeze(["checkpoint", "executionTimeoutMs", "stepTimeoutMs"]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.TRANSITION_DECISION]: Object.freeze([
+        "stepIndex",
+        "outcome",
+        "action",
+        "terminal",
+        "policyVersion",
+        "reason",
+    ]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.STEP_END]: Object.freeze(["stepIndex", "terminal", "reason"]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.CANCEL_TERMINAL]: Object.freeze(["checkpoint"]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.TIMEOUT_TERMINAL]: Object.freeze(["checkpoint"]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.EXECUTION_END]: Object.freeze(["terminal", "stepCount", "errorCode", "errorMessage"]),
+    [GUARDED_TELEMETRY_EVENT_TYPES.UNKNOWN]: Object.freeze(["originalType"]),
+});
 const DEFAULT_RUNTIME_CONTINUATION_GATE = Object.freeze({
     allowContinuation: false,
     maxSteps: 1,
@@ -241,21 +273,56 @@ function resolveGuardedRuntimeStabilityConfig() {
     };
 }
 
+function normalizeGuardedTelemetryType(typeLike) {
+    const type = String(typeLike || "").trim();
+    if (GUARDED_TELEMETRY_EVENT_TYPE_SET.has(type)) return type;
+    return GUARDED_TELEMETRY_EVENT_TYPES.UNKNOWN;
+}
+
+function normalizeGuardedTelemetryDetailValue(rawValue) {
+    if (rawValue === null) return null;
+    if (typeof rawValue === "number") return Number.isFinite(rawValue) ? rawValue : null;
+    if (typeof rawValue === "boolean") return rawValue;
+    if (typeof rawValue === "string") return rawValue.trim().slice(0, GUARDED_TELEMETRY_MAX_STRING_LENGTH);
+    try {
+        return JSON.stringify(rawValue).slice(0, GUARDED_TELEMETRY_MAX_STRING_LENGTH);
+    } catch {
+        return String(rawValue || "").trim().slice(0, GUARDED_TELEMETRY_MAX_STRING_LENGTH);
+    }
+}
+
+function normalizeGuardedTelemetryDetail(type, detailLike = {}, originalTypeLike = null) {
+    const normalizedType = normalizeGuardedTelemetryType(type);
+    const allowedFields = GUARDED_TELEMETRY_DETAIL_FIELDS[normalizedType] || [];
+    const detail = detailLike && typeof detailLike === "object" ? detailLike : {};
+    const normalized = {};
+    for (const key of allowedFields) {
+        if (!Object.prototype.hasOwnProperty.call(detail, key)) continue;
+        normalized[key] = normalizeGuardedTelemetryDetailValue(detail[key]);
+    }
+    if (normalizedType === GUARDED_TELEMETRY_EVENT_TYPES.UNKNOWN) {
+        normalized.originalType = String(originalTypeLike || "").trim().slice(0, GUARDED_TELEMETRY_MAX_STRING_LENGTH);
+    }
+    return normalized;
+}
+
 function createRuntimeBreadcrumbRecorder({ printEnabled = false } = {}) {
     const events = [];
     return {
         add(type, detail = {}) {
+            const normalizedType = normalizeGuardedTelemetryType(type);
             const event = {
                 at: new Date().toISOString(),
-                type: String(type || "unknown").trim() || "unknown",
-                detail: detail && typeof detail === "object" ? detail : {},
+                schemaVersion: GUARDED_TELEMETRY_SCHEMA_VERSION,
+                type: normalizedType,
+                detail: normalizeGuardedTelemetryDetail(normalizedType, detail, type),
             };
             events.push(event);
             if (!printEnabled) return;
             try {
-                console.error("[runtime][breadcrumb]", JSON.stringify(event));
+                console.error("[runtime][telemetry]", JSON.stringify(event));
             } catch {
-                // Breadcrumb logging is strictly best-effort.
+                // Internal telemetry logging is strictly best-effort.
             }
         },
         list() {
@@ -457,16 +524,16 @@ function assertGuardedResilienceCheckpoint({
     try {
         assertGuardedExecutionNotCancelled(stabilityConfig);
     } catch (error) {
-        runtimeBreadcrumbs?.add("guarded_cancel_terminal", { checkpoint: stage });
+        runtimeBreadcrumbs?.add(GUARDED_TELEMETRY_EVENT_TYPES.CANCEL_TERMINAL, { checkpoint: stage });
         throw error;
     }
     try {
         assertGuardedExecutionBudget(startedAtMs, stabilityConfig);
     } catch (error) {
-        runtimeBreadcrumbs?.add("guarded_timeout_terminal", { checkpoint: stage });
+        runtimeBreadcrumbs?.add(GUARDED_TELEMETRY_EVENT_TYPES.TIMEOUT_TERMINAL, { checkpoint: stage });
         throw error;
     }
-    runtimeBreadcrumbs?.add("guarded_resilience_checkpoint", {
+    runtimeBreadcrumbs?.add(GUARDED_TELEMETRY_EVENT_TYPES.RESILIENCE_CHECKPOINT, {
         checkpoint: stage,
         executionTimeoutMs: Number(stabilityConfig?.executionTimeoutMs) || GUARDED_RUNTIME_STABILITY_POLICY.defaultExecutionTimeoutMs,
         stepTimeoutMs: Number(stabilityConfig?.stepTimeoutMs) || GUARDED_RUNTIME_STABILITY_POLICY.defaultStepTimeoutMs,
@@ -997,7 +1064,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
             })
             : null;
         if (guardedModeActive) {
-            runtimeBreadcrumbs.add("guarded_execution_start", {
+            runtimeBreadcrumbs.add(GUARDED_TELEMETRY_EVENT_TYPES.EXECUTION_START, {
                 maxSteps: executionBoundary.maxSteps,
                 stepTimeoutMs: guardedStability.stepTimeoutMs,
                 executionTimeoutMs: guardedStability.executionTimeoutMs,
@@ -1013,7 +1080,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         // - guarded_loop mode continues until maxSteps hard-cap is reached.
         while (stepIndex <= executionBoundary.maxSteps) {
             if (guardedModeActive) {
-                runtimeBreadcrumbs.add("guarded_step_start", {
+                runtimeBreadcrumbs.add(GUARDED_TELEMETRY_EVENT_TYPES.STEP_START, {
                     stepIndex,
                     maxSteps: executionBoundary.maxSteps,
                 });
@@ -1068,7 +1135,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                         ? guardedStability.forcedTransitionOutcomeRaw
                         : null,
                 });
-                runtimeBreadcrumbs.add("guarded_transition_decision", {
+                runtimeBreadcrumbs.add(GUARDED_TELEMETRY_EVENT_TYPES.TRANSITION_DECISION, {
                     stepIndex,
                     outcome: transition.outcome,
                     action: transition.action,
@@ -1088,7 +1155,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                         { role: "assistant", content: reply },
                         { role: "user", content: GUARDED_LOOP_EXECUTION_POLICY.continuationPrompt },
                     ];
-                    runtimeBreadcrumbs.add("guarded_step_end", {
+                    runtimeBreadcrumbs.add(GUARDED_TELEMETRY_EVENT_TYPES.STEP_END, {
                         stepIndex,
                         terminal: false,
                         reason: transition.reason,
@@ -1097,7 +1164,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                     continue;
                 }
                 if (transition.action === GUARDED_TRANSITION_ACTIONS.STOP_TERMINAL) {
-                    runtimeBreadcrumbs.add("guarded_step_end", {
+                    runtimeBreadcrumbs.add(GUARDED_TELEMETRY_EVENT_TYPES.STEP_END, {
                         stepIndex,
                         terminal: true,
                         reason: transition.reason,
@@ -1127,7 +1194,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
             stepIndex += 1;
         }
         if (guardedModeActive) {
-            runtimeBreadcrumbs.add("guarded_execution_end", {
+            runtimeBreadcrumbs.add(GUARDED_TELEMETRY_EVENT_TYPES.EXECUTION_END, {
                 terminal: "success",
                 stepCount: stepIndex,
             });
@@ -1153,10 +1220,10 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         };
     } catch (error) {
         if (runtimeBreadcrumbs) {
-            runtimeBreadcrumbs.add("guarded_execution_end", {
+            runtimeBreadcrumbs.add(GUARDED_TELEMETRY_EVENT_TYPES.EXECUTION_END, {
                 terminal: "failed",
-                code: error?.code || "assistant_failed",
-                message: error?.message || "Unknown execution failure",
+                errorCode: error?.code || "assistant_failed",
+                errorMessage: error?.message || "Unknown execution failure",
             });
         }
         throw normalizeExecutionFailure(error);

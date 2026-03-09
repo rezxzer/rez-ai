@@ -674,6 +674,35 @@ How to verify:
 - Confirm no new routes/endpoints/public fields are introduced.
 Date: 2026-03-09
 
+### PHASE 56 Step 3 — Internal telemetry baseline schema
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added guarded-only internal telemetry schema baseline with version constant and canonical event-type constants.
+- Added deterministic telemetry detail whitelist/normalization to enforce bounded internal event payload shape.
+- Aligned existing guarded telemetry events (`execution_start/end`, `step_start/end`, resilience checkpoints, transition decision) to the schema envelope.
+- Preserved telemetry as best-effort and non-fatal; telemetry remains internal-only.
+- Preserved strict guardrails: no `/api/chat` contract changes, no new endpoints, no UI changes, no public task/state/review exposure, and no public review semantics in error code/message.
+Current reality:
+- Guarded runtime diagnostics now emit a normalized internal telemetry envelope with schema versioning.
+Target intent:
+- Establish a stable baseline telemetry schema before Phase 56 regression closeout.
+Guardrail:
+- Keep all public API/UI surfaces unchanged.
+Fallback/default posture:
+- Telemetry normalization/logging failures remain non-fatal and cannot alter bounded execution behavior.
+How to verify:
+- Confirm guarded telemetry logs include `schemaVersion`, canonical `type`, and deterministic `detail` fields when `REZ_RUNTIME_PRINT_BREADCRUMBS=1`.
+- Confirm timeout/cancel/transition checkpoints continue to terminate deterministically with unchanged public-safe error behavior.
+- Confirm default deny path remains single-step and guarded allow remains bounded (`maxSteps: 2`).
+- Confirm no new routes/endpoints/public fields and no review semantics in public errors.
+- Confirm docs point next step to `Implement Phase 56 Step 4 — Regression verification + DoD closeout + docs sync`.
+Date: 2026-03-09
+
 ### PHASE 56 Step 2 — Timeout/cancel resilience hardening
 Status: DONE
 Files touched:
