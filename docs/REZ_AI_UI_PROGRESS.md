@@ -522,6 +522,37 @@ How to verify:
 - Confirm single-step boundary remains active in assistant execution boundary assertions.
 Date: 2026-03-07
 
+### PHASE 55 Step 2 — Activate bounded guarded loop path
+Status: DONE
+Files touched:
+- server.js
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Extended internal continuation-gate payload to include guarded-loop `maxSteps` while preserving deny-by-default behavior.
+- Activated internal guarded loop execution path in assistant runtime behind explicit continuation-gate allow conditions.
+- Added bounded execution-boundary validation for dual modes: default `single_step` and guarded `guarded_loop`.
+- Enforced hard cap (`maxSteps: 2`) and deterministic exits in guarded mode (stop at cap, fail on provider/runtime failure).
+- Preserved public behavior and contract: no `/api/chat` field/shape changes, no new endpoints, no UI changes, no public task/state/review exposure.
+- Updated Phase 55 docs status to in-progress with Step 1-2 completed and advanced next step to Phase 55 Step 3.
+Current reality:
+- Runtime baseline remained single-step unless explicit internal continuation allow conditions are met.
+Target intent:
+- Activate bounded guarded continuation path as the minimal internal runtime evolution slice.
+Guardrail:
+- No `/api/chat` contract changes, no public endpoint/field additions, and no UI changes.
+Fallback/default posture:
+- Continuation remains deny-by-default and default execution remains single-step.
+How to verify:
+- Confirm `server.js` emits internal continuation payload with `allowContinuation=false,maxSteps=1` by default and only emits guarded values when explicit internal allow preconditions pass.
+- Confirm `apps/assistant/rez-ai.js` builds `single_step` boundary by default and only activates `guarded_loop` when the internal gate allows continuation.
+- Confirm guarded loop path is hard-capped to 2 steps and stops deterministically at cap.
+- Confirm provider/runtime failures in guarded path terminate through deterministic bounded failure handling.
+- Confirm `/api/chat` response contract and UI behavior remain unchanged (no public task/state/review fields).
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
