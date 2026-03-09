@@ -6260,6 +6260,129 @@ Manual verify:
 
 ---
 
+# PHASE 56 — Internal Guarded Transition Policy Hardening
+
+Objective:
+- Harden guarded-runtime transition policy semantics with strict internal-only deterministic behavior.
+- Preserve all public guardrails: `/api/chat` contract unchanged, no new endpoints, no public task/state/review exposure, no UI changes.
+- Keep telemetry strictly internal-only and bounded.
+
+## 56.1 Scope (Stepwise Internal Hardening)
+
+### Item A — Strict guarded-mode-only transition policy resolver
+Current reality:
+- Guarded runtime transitions are active but require stricter policy centralization.
+Target intent:
+- Enforce a single guarded-mode-only transition policy resolver with explicit action outputs.
+Guardrail:
+- Single-step default path remains unchanged and does not use guarded transition policy resolver.
+Fallback/default posture:
+- Any undefined policy branch resolves to deterministic bounded fail-terminal behavior.
+
+### Item B — Deterministic precedence ordering
+Current reality:
+- Deterministic behavior exists but precedence ordering should be explicitly hardened.
+Target intent:
+- Enforce deterministic precedence order across internal guarded transition decisions.
+Guardrail:
+- No public behavior/field expansion from precedence hardening.
+Fallback/default posture:
+- If conflict exists between transition signals, highest-priority deterministic terminal wins.
+
+### Item C — Bounded fallback mapping for unknown/invalid outcomes
+Current reality:
+- Unknown transition outcomes should terminate safely without ambiguity.
+Target intent:
+- Map unknown/invalid outcomes to bounded fail-terminal action deterministically.
+Guardrail:
+- No review semantics leaked publicly from fallback handling.
+Fallback/default posture:
+- Unknown transition outcomes always terminate with public-safe bounded failure semantics.
+
+### Item D — Internal-only transition decision breadcrumb alignment
+Current reality:
+- Breadcrumbs exist; transition decision payload alignment requires stricter internal policy semantics.
+Target intent:
+- Emit transition decision breadcrumbs with explicit internal action/terminal/policy version alignment.
+Guardrail:
+- Breadcrumbs remain internal-only (no API/meta/UI exposure).
+Fallback/default posture:
+- Breadcrumb write failure remains non-fatal and contract-safe.
+
+### Item E — Explicit unchanged surfaces
+Must remain unchanged in Phase 56:
+- `/api/chat` request/response contract.
+- Public endpoint surface (no new endpoints).
+- Public task/state/review/observability exposure.
+- UI behavior and layout.
+- Single-step default execution posture.
+
+## 56.2 Phase 56 Acceptance Criteria (DoD Draft)
+
+Phase 56 is DONE only if all pass:
+- [x] Guarded-mode-only strict transition policy resolver is active.
+- [x] Deterministic precedence ordering is active in guarded transition policy path.
+- [x] Unknown/invalid transition outcomes map to bounded fail-terminal behavior deterministically.
+- [x] Transition decision breadcrumbs are aligned and remain internal-only.
+- [ ] `/api/chat` contract and endpoint surface remain unchanged.
+- [ ] No public task/state/review/observability exposure exists.
+- [ ] UI flow remains unchanged.
+- [ ] Regression verification covers default single-step and guarded internal path safety.
+
+Status: In progress (Step 1 implemented)
+
+## 56.3 Minimal Implementation Step Plan (1-4)
+
+### Step 1 — Implement internal transition policy hardening
+Current reality:
+- Guarded transitions exist but required stricter policy centralization and deterministic fallback mapping.
+Target intent:
+- Implement strict guarded-mode-only resolver, precedence ordering, bounded invalid-outcome fallback, and breadcrumb alignment.
+Guardrail:
+- No public API contract changes, no endpoint additions, and no UI changes.
+Fallback/default posture:
+- Single-step remains default baseline; guarded path remains internal-only and bounded.
+Implementation status:
+- Implemented in this slice (runtime + docs sync).
+Manual verify:
+- Confirm guarded transition policy emits explicit deterministic action (`continue_step`, `stop_terminal`, `fail_terminal`, `needs_review_terminal`).
+- Confirm precedence ordering remains deterministic under conflicting/internal override conditions.
+- Confirm unknown forced transition outcome deterministically maps to bounded fail-terminal behavior.
+- Confirm transition decision breadcrumbs remain internal-only and include aligned action/terminal/policy metadata.
+- Confirm no review semantics appear in public error code/message.
+
+### Step 2 — Transition policy verification hardening pack
+Current reality:
+- Initial transition policy hardening is active but requires broader matrix verification.
+Target intent:
+- Expand guarded-path transition verification matrix across normal, override, and invalid outcome conditions.
+Guardrail:
+- Verification-only; no public contract expansion.
+Fallback/default posture:
+- Preserve bounded deterministic terminal handling on any uncertain branch.
+
+### Step 3 — Internal transition diagnostics polish
+Current reality:
+- Internal transition breadcrumbs are active with baseline policy alignment.
+Target intent:
+- Tighten diagnostic consistency for transition decision/failure reason taxonomy (internal-only).
+Guardrail:
+- No public observability exposure.
+Fallback/default posture:
+- If diagnostic enrichment fails, runtime behavior remains deterministic and contract-safe.
+
+### Step 4 — Regression verification + DoD closeout + docs sync
+Current reality:
+- Phase 56 DoD closeout is pending evidence completion.
+Target intent:
+- Verify all guardrails and close phase with explicit PASS/NOT FULLY VERIFIED status.
+Guardrail:
+- No scope expansion beyond Phase 56 internal hardening boundaries.
+Fallback/default posture:
+- If evidence is partial, keep phase open and preserve current safe defaults.
+
+---
+
 # ⚠ TECHNICAL DEBT TRACKER
 
 Current Known Issues:
@@ -6287,7 +6410,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next phase roadmap after Phase 55 closeout
+→ Implement Phase 56 Step 2 — Transition policy verification hardening pack
 
 ---
 

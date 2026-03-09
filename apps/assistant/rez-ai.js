@@ -70,6 +70,13 @@ const GUARDED_STEP_OUTCOMES = Object.freeze({
     FAIL: "fail",
     NEEDS_REVIEW: "needs_review",
 });
+const GUARDED_TRANSITION_ACTIONS = Object.freeze({
+    CONTINUE_STEP: "continue_step",
+    STOP_TERMINAL: "stop_terminal",
+    FAIL_TERMINAL: "fail_terminal",
+    NEEDS_REVIEW_TERMINAL: "needs_review_terminal",
+});
+const GUARDED_TRANSITION_POLICY_VERSION = "phase56_step1";
 const DEFAULT_RUNTIME_CONTINUATION_GATE = Object.freeze({
     allowContinuation: false,
     maxSteps: 1,
@@ -221,12 +228,16 @@ function resolveGuardedRuntimeStabilityConfig() {
     const cancelRequested = String(process.env.REZ_RUNTIME_CANCEL_SIGNAL || "").trim() === "1";
     const forceNeedsReview = String(process.env.REZ_RUNTIME_FORCE_NEEDS_REVIEW || "").trim() === "1";
     const printBreadcrumbs = String(process.env.REZ_RUNTIME_PRINT_BREADCRUMBS || "").trim() === "1";
+    const forcedTransitionOutcomeRaw = String(process.env.REZ_RUNTIME_FORCE_TRANSITION_OUTCOME || "")
+        .trim()
+        .toLowerCase() || null;
     return {
         stepTimeoutMs,
         executionTimeoutMs,
         cancelRequested,
         forceNeedsReview,
         printBreadcrumbs,
+        forcedTransitionOutcomeRaw,
     };
 }
 
@@ -456,10 +467,24 @@ async function runProviderStepWithTimeout({ provider, model, messages, temperatu
     }
 }
 
-function resolveGuardedStepOutcome({ stepIndex, maxSteps, replyText, forceNeedsReview = false }) {
+function resolveGuardedTransitionPolicy({
+    stepIndex,
+    maxSteps,
+    replyText,
+    forceNeedsReview = false,
+    requestedOutcome = null,
+}) {
+    // Deterministic precedence ordering for guarded mode:
+    // 1) explicit internal needs_review override,
+    // 2) invalid/empty provider reply,
+    // 3) explicit requested outcome (if provided),
+    // 4) bounded default decision (continue until cap, then stop).
     if (forceNeedsReview) {
         return {
             outcome: GUARDED_STEP_OUTCOMES.NEEDS_REVIEW,
+            action: GUARDED_TRANSITION_ACTIONS.NEEDS_REVIEW_TERMINAL,
+            terminal: true,
+            policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
             reason: "forced_internal_needs_review",
         };
     }
@@ -467,18 +492,71 @@ function resolveGuardedStepOutcome({ stepIndex, maxSteps, replyText, forceNeedsR
     if (!normalizedReply) {
         return {
             outcome: GUARDED_STEP_OUTCOMES.FAIL,
+            action: GUARDED_TRANSITION_ACTIONS.FAIL_TERMINAL,
+            terminal: true,
+            policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
             reason: "empty_reply",
         };
     }
-    if (stepIndex >= maxSteps) {
+
+    const fallbackOutcome = stepIndex >= maxSteps
+        ? GUARDED_STEP_OUTCOMES.STOP
+        : GUARDED_STEP_OUTCOMES.CONTINUE;
+    const rawOutcome = requestedOutcome == null
+        ? fallbackOutcome
+        : String(requestedOutcome || "").trim().toLowerCase();
+
+    if (rawOutcome === GUARDED_STEP_OUTCOMES.CONTINUE) {
+        if (stepIndex >= maxSteps) {
+            return {
+                outcome: GUARDED_STEP_OUTCOMES.STOP,
+                action: GUARDED_TRANSITION_ACTIONS.STOP_TERMINAL,
+                terminal: true,
+                policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
+                reason: "max_steps_reached",
+            };
+        }
+        return {
+            outcome: GUARDED_STEP_OUTCOMES.CONTINUE,
+            action: GUARDED_TRANSITION_ACTIONS.CONTINUE_STEP,
+            terminal: false,
+            policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
+            reason: "bounded_continue",
+        };
+    }
+    if (rawOutcome === GUARDED_STEP_OUTCOMES.STOP) {
         return {
             outcome: GUARDED_STEP_OUTCOMES.STOP,
-            reason: "max_steps_reached",
+            action: GUARDED_TRANSITION_ACTIONS.STOP_TERMINAL,
+            terminal: true,
+            policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
+            reason: "explicit_stop",
+        };
+    }
+    if (rawOutcome === GUARDED_STEP_OUTCOMES.FAIL) {
+        return {
+            outcome: GUARDED_STEP_OUTCOMES.FAIL,
+            action: GUARDED_TRANSITION_ACTIONS.FAIL_TERMINAL,
+            terminal: true,
+            policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
+            reason: "explicit_fail",
+        };
+    }
+    if (rawOutcome === GUARDED_STEP_OUTCOMES.NEEDS_REVIEW) {
+        return {
+            outcome: GUARDED_STEP_OUTCOMES.NEEDS_REVIEW,
+            action: GUARDED_TRANSITION_ACTIONS.NEEDS_REVIEW_TERMINAL,
+            terminal: true,
+            policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
+            reason: "explicit_needs_review",
         };
     }
     return {
-        outcome: GUARDED_STEP_OUTCOMES.CONTINUE,
-        reason: "bounded_continue",
+        outcome: GUARDED_STEP_OUTCOMES.FAIL,
+        action: GUARDED_TRANSITION_ACTIONS.FAIL_TERMINAL,
+        terminal: true,
+        policyVersion: GUARDED_TRANSITION_POLICY_VERSION,
+        reason: `invalid_outcome:${rawOutcome || "unknown"}`,
     };
 }
 
@@ -944,18 +1022,24 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                 : toAnswerText(out);
 
             if (guardedModeActive) {
-                const transition = resolveGuardedStepOutcome({
+                const transition = resolveGuardedTransitionPolicy({
                     stepIndex,
                     maxSteps: executionBoundary.maxSteps,
                     replyText: reply,
                     forceNeedsReview: guardedStability.forceNeedsReview && stepIndex === 1,
+                    requestedOutcome: guardedStability.forcedTransitionOutcomeRaw && stepIndex === 1
+                        ? guardedStability.forcedTransitionOutcomeRaw
+                        : null,
                 });
-                runtimeBreadcrumbs.add("guarded_transition", {
+                runtimeBreadcrumbs.add("guarded_transition_decision", {
                     stepIndex,
                     outcome: transition.outcome,
+                    action: transition.action,
+                    terminal: transition.terminal,
+                    policyVersion: transition.policyVersion || GUARDED_TRANSITION_POLICY_VERSION,
                     reason: transition.reason,
                 });
-                if (transition.outcome === GUARDED_STEP_OUTCOMES.CONTINUE) {
+                if (transition.action === GUARDED_TRANSITION_ACTIONS.CONTINUE_STEP) {
                     stepMessages = [
                         ...stepMessages,
                         { role: "assistant", content: reply },
@@ -969,7 +1053,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                     stepIndex += 1;
                     continue;
                 }
-                if (transition.outcome === GUARDED_STEP_OUTCOMES.STOP) {
+                if (transition.action === GUARDED_TRANSITION_ACTIONS.STOP_TERMINAL) {
                     runtimeBreadcrumbs.add("guarded_step_end", {
                         stepIndex,
                         terminal: true,
@@ -977,15 +1061,15 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                     });
                     break;
                 }
-                if (transition.outcome === GUARDED_STEP_OUTCOMES.NEEDS_REVIEW) {
+                if (transition.action === GUARDED_TRANSITION_ACTIONS.NEEDS_REVIEW_TERMINAL) {
                     throw makeExecutionError(
-                        "execution_needs_review",
-                        "Guarded runtime reached needs_review terminal (internal-only deterministic stop)"
+                        "execution_transition_failed",
+                        "Guarded runtime reached bounded terminal"
                     );
                 }
                 throw makeExecutionError(
                     "execution_transition_failed",
-                    `Guarded runtime reached fail terminal (${transition.reason})`
+                    "Guarded runtime reached bounded fail terminal"
                 );
             }
 
