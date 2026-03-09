@@ -19,9 +19,11 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 56 — Internal Guarded Transition Policy Hardening` (in progress, Step 1 implemented).
+- **Current phase:** `PHASE 56 — Internal Guarded Transition Policy Hardening` (in progress, Step 3 implemented).
 - **Latest phase closeout:** `PHASE 55 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 56 Step 3 — Internal telemetry baseline schema`
+  - `PHASE 56 Step 2 — Timeout/cancel resilience hardening`
   - `PHASE 56 Step 1 — Internal transition policy hardening`
   - `REZ-AI Roadmap Update — Define PHASE 56 — Internal Guarded Transition Policy Hardening`
   - `PHASE 55 Step 4 — Regression verification + DoD closeout + docs sync`
@@ -148,6 +150,7 @@ Use this as bootstrap context for new AI chats.
   - Strict guarded-mode-only transition policy resolver with explicit deterministic action outputs.
   - Deterministic precedence ordering for guarded transition decisions.
   - Guarded-only timeout/cancel resilience hardening with deterministic checkpoint precedence.
+  - Guarded-only internal telemetry baseline schema with versioned event types and deterministic detail normalization.
   - Bounded fallback mapping for unknown/invalid outcomes.
   - Internal-only transition decision breadcrumb alignment.
   - Strict guardrails remain explicit: `/api/chat` contract unchanged, no new public endpoints/fields, no UI changes.
@@ -162,6 +165,12 @@ Use this as bootstrap context for new AI chats.
   - Enforced cancel precedence over budget checks at each guarded checkpoint.
   - Prevented guarded continuation whenever cancel is asserted or execution budget is exhausted.
   - Kept timeout/cancel terminal mapping stable and public-safe (`execution_timeout`, `execution_cancelled`).
+  - Preserved strict guardrails: `/api/chat` contract unchanged, no new endpoints/fields, no public task/state/review exposure, no public review semantics, and no UI changes.
+- **Phase 56 Step 3 summary (implemented):**
+  - Added guarded-only internal telemetry schema baseline with explicit schema version and canonical event-type constants.
+  - Enforced deterministic telemetry detail normalization with event-specific whitelist fields.
+  - Aligned existing guarded telemetry events (`execution`, `step`, `checkpoint`, `transition`) to the normalized schema envelope.
+  - Preserved best-effort/non-fatal internal telemetry behavior and kept telemetry internal-only.
   - Preserved strict guardrails: `/api/chat` contract unchanged, no new endpoints/fields, no public task/state/review exposure, no public review semantics, and no UI changes.
 - **Phase 52 Step 1 summary (implemented):**
   - Internal task unit envelope exists for active `/api/chat` execution path.
@@ -187,7 +196,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Implement Phase 56 Step 3 — Internal transition diagnostics polish.
+  - Implement Phase 56 Step 4 — Regression verification + DoD closeout + docs sync.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
