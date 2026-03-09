@@ -60,6 +60,16 @@ const GUARDED_LOOP_EXECUTION_POLICY = Object.freeze({
     stepType: "provider_chat_guarded_step",
     continuationPrompt: "Internal continuation: refine the previous answer and provide a final response.",
 });
+const GUARDED_RUNTIME_STABILITY_POLICY = Object.freeze({
+    defaultStepTimeoutMs: 12000,
+    defaultExecutionTimeoutMs: 20000,
+});
+const GUARDED_STEP_OUTCOMES = Object.freeze({
+    CONTINUE: "continue",
+    STOP: "stop",
+    FAIL: "fail",
+    NEEDS_REVIEW: "needs_review",
+});
 const DEFAULT_RUNTIME_CONTINUATION_GATE = Object.freeze({
     allowContinuation: false,
     maxSteps: 1,
@@ -71,6 +81,10 @@ const KNOWN_EXECUTION_ERROR_CODES = new Set([
     "execution_invalid_shape",
     "execution_preparation_failed",
     "execution_unsupported",
+    "execution_transition_failed",
+    "execution_needs_review",
+    "execution_timeout",
+    "execution_cancelled",
     "provider_failed",
     "provider_not_implemented",
     "assistant_failed",
@@ -173,12 +187,70 @@ function makeExecutionError(code, message, cause = null) {
 
 function normalizeExecutionFailure(errorLike) {
     const code = String(errorLike?.code || "").trim();
+    if (code === "execution_needs_review") {
+        return makeExecutionError(
+            "execution_transition_failed",
+            "Guarded runtime reached bounded terminal",
+            errorLike || null
+        );
+    }
     if (code && KNOWN_EXECUTION_ERROR_CODES.has(code)) return errorLike;
     return makeExecutionError(
         "assistant_failed",
         errorLike?.message || "Bounded execution failed",
         errorLike || null
     );
+}
+
+function resolvePositiveInt(rawValue, fallback) {
+    const parsed = Number.parseInt(String(rawValue ?? ""), 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+    return parsed;
+}
+
+function resolveGuardedRuntimeStabilityConfig() {
+    const stepTimeoutMs = resolvePositiveInt(
+        process.env.REZ_RUNTIME_GUARDED_STEP_TIMEOUT_MS,
+        GUARDED_RUNTIME_STABILITY_POLICY.defaultStepTimeoutMs
+    );
+    const executionTimeoutMsRaw = resolvePositiveInt(
+        process.env.REZ_RUNTIME_GUARDED_EXECUTION_TIMEOUT_MS,
+        GUARDED_RUNTIME_STABILITY_POLICY.defaultExecutionTimeoutMs
+    );
+    const executionTimeoutMs = Math.max(executionTimeoutMsRaw, stepTimeoutMs);
+    const cancelRequested = String(process.env.REZ_RUNTIME_CANCEL_SIGNAL || "").trim() === "1";
+    const forceNeedsReview = String(process.env.REZ_RUNTIME_FORCE_NEEDS_REVIEW || "").trim() === "1";
+    const printBreadcrumbs = String(process.env.REZ_RUNTIME_PRINT_BREADCRUMBS || "").trim() === "1";
+    return {
+        stepTimeoutMs,
+        executionTimeoutMs,
+        cancelRequested,
+        forceNeedsReview,
+        printBreadcrumbs,
+    };
+}
+
+function createRuntimeBreadcrumbRecorder({ printEnabled = false } = {}) {
+    const events = [];
+    return {
+        add(type, detail = {}) {
+            const event = {
+                at: new Date().toISOString(),
+                type: String(type || "unknown").trim() || "unknown",
+                detail: detail && typeof detail === "object" ? detail : {},
+            };
+            events.push(event);
+            if (!printEnabled) return;
+            try {
+                console.error("[runtime][breadcrumb]", JSON.stringify(event));
+            } catch {
+                // Breadcrumb logging is strictly best-effort.
+            }
+        },
+        list() {
+            return events.slice();
+        },
+    };
 }
 
 function normalizeGuardedLoopMaxSteps(maxStepsLike) {
@@ -346,6 +418,68 @@ function assertRuntimeExecutionBoundary(boundary) {
     }
 
     throw makeExecutionError("execution_invalid_shape", "Execution boundary mode is invalid");
+}
+
+function assertGuardedExecutionNotCancelled(stabilityConfig) {
+    if (stabilityConfig?.cancelRequested !== true) return;
+    throw makeExecutionError("execution_cancelled", "Guarded execution cancelled by internal signal");
+}
+
+function assertGuardedExecutionBudget(startedAtMs, stabilityConfig) {
+    const elapsedMs = Date.now() - startedAtMs;
+    const budgetMs = Number(stabilityConfig?.executionTimeoutMs) || GUARDED_RUNTIME_STABILITY_POLICY.defaultExecutionTimeoutMs;
+    if (elapsedMs <= budgetMs) return;
+    throw makeExecutionError(
+        "execution_timeout",
+        `Guarded execution exceeded timeout budget (${budgetMs}ms)`
+    );
+}
+
+async function runProviderStepWithTimeout({ provider, model, messages, temperature, max_tokens, baseUrl, timeoutMs }) {
+    let timer = null;
+    try {
+        const timeoutPromise = new Promise((_, reject) => {
+            timer = setTimeout(() => {
+                reject(makeExecutionError("execution_timeout", `Guarded step timed out after ${timeoutMs}ms`));
+            }, timeoutMs);
+        });
+        const providerPromise = provider.chat({
+            model,
+            messages,
+            temperature,
+            max_tokens,
+            baseUrl,
+        });
+        return await Promise.race([providerPromise, timeoutPromise]);
+    } finally {
+        if (timer) clearTimeout(timer);
+    }
+}
+
+function resolveGuardedStepOutcome({ stepIndex, maxSteps, replyText, forceNeedsReview = false }) {
+    if (forceNeedsReview) {
+        return {
+            outcome: GUARDED_STEP_OUTCOMES.NEEDS_REVIEW,
+            reason: "forced_internal_needs_review",
+        };
+    }
+    const normalizedReply = typeof replyText === "string" ? replyText.trim() : "";
+    if (!normalizedReply) {
+        return {
+            outcome: GUARDED_STEP_OUTCOMES.FAIL,
+            reason: "empty_reply",
+        };
+    }
+    if (stepIndex >= maxSteps) {
+        return {
+            outcome: GUARDED_STEP_OUTCOMES.STOP,
+            reason: "max_steps_reached",
+        };
+    }
+    return {
+        outcome: GUARDED_STEP_OUTCOMES.CONTINUE,
+        reason: "bounded_continue",
+    };
 }
 
 function getRequestedRuntimeMode(scopeLike) {
@@ -660,6 +794,7 @@ function buildKBContext(hits, maxChars = 2500) {
 }
 
 async function providerChat({ systemPrompt, userText, k, providerName, modelName, runtimeScope, runtimeTask }) {
+    let runtimeBreadcrumbs = null;
     try {
         const runtimeHooks = buildRuntimeScopeHooks(runtimeScope);
         const executionBoundary = createRuntimeExecutionBoundary({
@@ -748,6 +883,21 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         };
         const provider = getProvider(providerName || DEFAULT_PROVIDER);
         const providerBaseUrl = providerName === "ollama" ? OLLAMA_BASE : LMSTUDIO_BASE;
+        const guardedModeActive = executionBoundary.mode === GUARDED_LOOP_EXECUTION_POLICY.mode;
+        const guardedStability = guardedModeActive ? resolveGuardedRuntimeStabilityConfig() : null;
+        const guardedStartedAtMs = Date.now();
+        runtimeBreadcrumbs = guardedModeActive
+            ? createRuntimeBreadcrumbRecorder({
+                printEnabled: guardedStability?.printBreadcrumbs === true,
+            })
+            : null;
+        if (guardedModeActive) {
+            runtimeBreadcrumbs.add("guarded_execution_start", {
+                maxSteps: executionBoundary.maxSteps,
+                stepTimeoutMs: guardedStability.stepTimeoutMs,
+                executionTimeoutMs: guardedStability.executionTimeoutMs,
+            });
+        }
         let stepMessages = payload.messages;
         let stepIndex = 1;
         let out = {};
@@ -757,13 +907,31 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         // - single_step mode executes once.
         // - guarded_loop mode continues until maxSteps hard-cap is reached.
         while (stepIndex <= executionBoundary.maxSteps) {
-            const providerResult = await provider.chat({
-                model: payload.model,
-                messages: stepMessages,
-                temperature: payload.temperature,
-                max_tokens: payload.max_tokens,
-                baseUrl: providerBaseUrl,
-            });
+            if (guardedModeActive) {
+                runtimeBreadcrumbs.add("guarded_step_start", {
+                    stepIndex,
+                    maxSteps: executionBoundary.maxSteps,
+                });
+                assertGuardedExecutionNotCancelled(guardedStability);
+                assertGuardedExecutionBudget(guardedStartedAtMs, guardedStability);
+            }
+            const providerResult = guardedModeActive
+                ? await runProviderStepWithTimeout({
+                    provider,
+                    model: payload.model,
+                    messages: stepMessages,
+                    temperature: payload.temperature,
+                    max_tokens: payload.max_tokens,
+                    baseUrl: providerBaseUrl,
+                    timeoutMs: guardedStability.stepTimeoutMs,
+                })
+                : await provider.chat({
+                    model: payload.model,
+                    messages: stepMessages,
+                    temperature: payload.temperature,
+                    max_tokens: payload.max_tokens,
+                    baseUrl: providerBaseUrl,
+                });
             if (!providerResult?.ok) {
                 throw makeExecutionError(
                     providerResult?.error || "provider_failed",
@@ -775,8 +943,53 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                 ? providerResult.reply
                 : toAnswerText(out);
 
-            const shouldContinue = executionBoundary.mode === GUARDED_LOOP_EXECUTION_POLICY.mode
-                && stepIndex < executionBoundary.maxSteps;
+            if (guardedModeActive) {
+                const transition = resolveGuardedStepOutcome({
+                    stepIndex,
+                    maxSteps: executionBoundary.maxSteps,
+                    replyText: reply,
+                    forceNeedsReview: guardedStability.forceNeedsReview && stepIndex === 1,
+                });
+                runtimeBreadcrumbs.add("guarded_transition", {
+                    stepIndex,
+                    outcome: transition.outcome,
+                    reason: transition.reason,
+                });
+                if (transition.outcome === GUARDED_STEP_OUTCOMES.CONTINUE) {
+                    stepMessages = [
+                        ...stepMessages,
+                        { role: "assistant", content: reply },
+                        { role: "user", content: GUARDED_LOOP_EXECUTION_POLICY.continuationPrompt },
+                    ];
+                    runtimeBreadcrumbs.add("guarded_step_end", {
+                        stepIndex,
+                        terminal: false,
+                        reason: transition.reason,
+                    });
+                    stepIndex += 1;
+                    continue;
+                }
+                if (transition.outcome === GUARDED_STEP_OUTCOMES.STOP) {
+                    runtimeBreadcrumbs.add("guarded_step_end", {
+                        stepIndex,
+                        terminal: true,
+                        reason: transition.reason,
+                    });
+                    break;
+                }
+                if (transition.outcome === GUARDED_STEP_OUTCOMES.NEEDS_REVIEW) {
+                    throw makeExecutionError(
+                        "execution_needs_review",
+                        "Guarded runtime reached needs_review terminal (internal-only deterministic stop)"
+                    );
+                }
+                throw makeExecutionError(
+                    "execution_transition_failed",
+                    `Guarded runtime reached fail terminal (${transition.reason})`
+                );
+            }
+
+            const shouldContinue = stepIndex < executionBoundary.maxSteps;
             if (!shouldContinue) break;
 
             stepMessages = [
@@ -785,6 +998,12 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                 { role: "user", content: GUARDED_LOOP_EXECUTION_POLICY.continuationPrompt },
             ];
             stepIndex += 1;
+        }
+        if (guardedModeActive) {
+            runtimeBreadcrumbs.add("guarded_execution_end", {
+                terminal: "success",
+                stepCount: stepIndex,
+            });
         }
 
         return {
@@ -806,6 +1025,13 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
             },
         };
     } catch (error) {
+        if (runtimeBreadcrumbs) {
+            runtimeBreadcrumbs.add("guarded_execution_end", {
+                terminal: "failed",
+                code: error?.code || "assistant_failed",
+                message: error?.message || "Unknown execution failure",
+            });
+        }
         throw normalizeExecutionFailure(error);
     }
 }
