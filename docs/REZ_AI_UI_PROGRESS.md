@@ -811,6 +811,27 @@ How to verify:
 - Confirm `/api/chat` contract remains unchanged (`ok/reply/meta` success, `ok/error/meta` failure).
 Date: 2026-03-09
 
+### PHASE 59 — REZ-AI operator mode definition and UX surface clarity
+Status: DONE
+Files touched:
+- apps/ui/src/App.jsx
+- apps/ui/src/App.css
+- apps/ui/src/presets.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Clarified UX identity copy so REZ-AI presents as a practical local operator assistant instead of a generic chat shell.
+- Updated welcome/header/composer/workflow copy toward explicit operator flow (`goal + context + constraints`, plan/next-step/checklist drafting).
+- Updated preset naming/descriptions to operator-oriented labels with unchanged preset IDs and unchanged runtime/provider/KB behavior.
+- Added small readability polish in preset helper text and preserved existing layout structure.
+How to verify:
+- Load UI and confirm header/welcome/composer/workflow tool text reflects operator-style practical usage.
+- Confirm preset labels now show operator-oriented names/descriptions and selection behavior remains unchanged.
+- Send a normal chat message and confirm `/api/chat` behavior/shape remains unchanged.
+- Confirm no provider runtime, guarded runtime, or KB retrieval algorithm behavior changed.
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
