@@ -627,6 +627,53 @@ How to verify:
 - Confirm `CURRENT NEXT STEP` no longer points to an unfinished Phase 55 step.
 Date: 2026-03-09
 
+### REZ-AI Roadmap Update — Define PHASE 56 — Internal Guarded Transition Policy Hardening
+Status: DONE
+Files touched:
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added `PHASE 56 — Internal Guarded Transition Policy Hardening` planning section in `REZ_AI_MASTER_PLAN.md`.
+- Defined Phase 56 scope for guarded-mode-only transition policy hardening with deterministic precedence and bounded invalid-outcome fallback.
+- Defined strict unchanged-surface guardrails: `/api/chat` contract unchanged, no new endpoints, no UI changes, and no public task/state/review exposure.
+- Added Phase 56 DoD draft and Step 1-4 plan with conservative internal-only posture.
+- Updated `REZ_AI_CONTEXT.md` to set current phase to Phase 56 (Step 1 implemented) and advanced next step to `Implement Phase 56 Step 2`.
+- Updated master plan `CURRENT NEXT STEP` to `→ Implement Phase 56 Step 2 — Transition policy verification hardening pack`.
+How to verify:
+- Confirm `docs/REZ_AI_MASTER_PLAN.md` contains full `PHASE 56` section (objective, scope, DoD draft, Step 1-4 plan).
+- Confirm guardrails remain explicit and no public contract/endpoint/UI expansion is introduced in roadmap wording.
+- Confirm `docs/REZ_AI_CONTEXT.md` reflects Phase 56 as current phase and points to `Implement Phase 56 Step 2`.
+Date: 2026-03-09
+
+### PHASE 56 Step 1 — Internal transition policy hardening
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added strict guarded-mode-only transition policy resolver with explicit deterministic action outputs.
+- Enforced deterministic precedence ordering for guarded transition decisions.
+- Added bounded fallback mapping for unknown/invalid outcomes to deterministic fail-terminal handling.
+- Aligned transition decision breadcrumbs with internal-only action/terminal/policy metadata.
+- Preserved public safety posture: no `/api/chat` request/response changes, no new endpoints, no UI changes, no public task/state/review exposure, and no public review semantics in error code/message.
+Current reality:
+- Guarded runtime transitions now follow strict deterministic policy semantics under internal-only bounded flow.
+Target intent:
+- Harden internal transition governance before broader Phase 56 verification pack.
+Guardrail:
+- Keep public API/UI surfaces unchanged.
+Fallback/default posture:
+- Unknown/invalid transition outcomes terminate safely via deterministic bounded fail-terminal behavior.
+How to verify:
+- Confirm default deny path remains single-step (`maxSteps: 1`) and guarded allow remains bounded (`maxSteps: 2`).
+- Confirm forced invalid transition outcome maps to deterministic bounded fail-terminal handling.
+- Confirm timeout/cancel/internal-needs-review terminals remain deterministic with public-safe error semantics.
+- Confirm no new routes/endpoints/public fields are introduced.
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
