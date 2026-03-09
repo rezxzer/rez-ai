@@ -187,6 +187,13 @@ function makeExecutionError(code, message, cause = null) {
 
 function normalizeExecutionFailure(errorLike) {
     const code = String(errorLike?.code || "").trim();
+    if (code === "execution_needs_review") {
+        return makeExecutionError(
+            "execution_transition_failed",
+            "Guarded runtime reached bounded terminal",
+            errorLike || null
+        );
+    }
     if (code && KNOWN_EXECUTION_ERROR_CODES.has(code)) return errorLike;
     return makeExecutionError(
         "assistant_failed",

@@ -129,6 +129,7 @@ Use this as bootstrap context for new AI chats.
 - **Phase 55 Step 3 summary (implemented):**
   - Added guarded-mode-only internal transition handling for `continue/stop/fail/needs_review`.
   - Added internal timeout/cancel stability semantics in guarded mode with deterministic fail-terminal behavior.
+  - Internal `needs_review` terminal handling is preserved but mapped to a public-safe bounded failure code/message (no review-semantic public error exposure).
   - Added minimal internal-only runtime breadcrumbs for guarded path (`start/step/transition/end`), with best-effort logging only.
   - Single-step default path remains unchanged and guarded loop remains internal-only, gate-controlled, and hard-capped.
   - No `/api/chat` contract changes, no new endpoints/fields, no public task/state/review exposure, and no UI changes.

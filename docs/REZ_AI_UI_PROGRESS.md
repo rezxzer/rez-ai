@@ -563,6 +563,7 @@ Files touched:
 What changed:
 - Added guarded-mode-only internal transition handling for `continue/stop/fail/needs_review`.
 - Added internal timeout/cancel stability handling for guarded mode with deterministic fail-terminal behavior.
+- Preserved internal `needs_review` handling while mapping its terminal to a public-safe bounded failure code/message (no review-semantic public error exposure).
 - Added minimal internal-only breadcrumbs for guarded runtime (`execution_start`, `step_start`, `transition`, `step_end`, `execution_end`).
 - Preserved default safety posture: single-step baseline remains active when continuation gate is deny/default.
 - Preserved external contract surfaces: no `/api/chat` request/response changes, no new endpoints, no UI changes, no public task/state/review exposure.
@@ -578,6 +579,7 @@ Fallback/default posture:
 How to verify:
 - Confirm guarded mode transition outcomes (`continue/stop/fail/needs_review`) are handled internally and do not add public fields.
 - Confirm guarded-mode timeout and cancel internal signals produce deterministic fail-terminal responses.
+- Confirm forced internal `needs_review` terminal resolves to public-safe bounded failure code/message without review-semantic wording.
 - Confirm guarded-mode breadcrumbs are internal-only and best-effort (no public observability surface).
 - Confirm default deny path remains single-step (`maxSteps: 1`) with unchanged `/api/chat` behavior.
 - Confirm no new routes/endpoints/UI behavior changes were introduced.

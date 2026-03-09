@@ -6234,6 +6234,7 @@ Implementation status:
 Manual verify:
 - Confirm guarded mode transition handling is runtime-active for internal outcomes `continue/stop/fail/needs_review`.
 - Confirm guarded-mode timeout and cancel signals resolve through deterministic bounded fail-terminal handling.
+- Confirm internal `needs_review` terminal is mapped to public-safe bounded failure code/message with no review-semantic public error exposure.
 - Confirm breadcrumbs remain internal-only and are not exposed via `/api/chat` response fields.
 - Confirm default single-step path remains unchanged when continuation gate is deny/default.
 - Confirm no endpoint/public-field/UI contract expansion occurred.
