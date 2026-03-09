@@ -6173,15 +6173,15 @@ Must remain unchanged in Phase 55:
 Phase 55 is DONE only if all pass:
 - [x] Internal continuation gate exists with default single-step-preserving posture.
 - [x] Guarded multi-step runtime path is bounded by explicit hard cap and deterministic terminal exits.
-- [ ] Active transition handling covers `continue/stop/fail/needs_review` with deterministic bounded behavior.
-- [ ] Timeout/cancel handling is active only as internal bounded semantics (no public cancel API).
-- [ ] Minimal internal breadcrumb diagnostics exist for guarded path without public exposure.
+- [x] Active transition handling covers `continue/stop/fail/needs_review` with deterministic bounded behavior.
+- [x] Timeout/cancel handling is active only as internal bounded semantics (no public cancel API).
+- [x] Minimal internal breadcrumb diagnostics exist for guarded path without public exposure.
 - [ ] `/api/chat` contract and endpoint surface remain unchanged.
 - [ ] No public task/state/review/observability fields are exposed.
 - [ ] UI flow remains unchanged.
 - [ ] Regression verification covers default single-step path and guarded internal path safety.
 
-Status: In progress (Step 1-2 implemented)
+Status: In progress (Step 1-3 implemented)
 
 ## 55.3 Minimal Implementation Step Plan (1-4)
 
@@ -6222,13 +6222,21 @@ Manual verify:
 
 ### Step 3 — Wire transition + timeout/cancel + internal breadcrumbs
 Current reality:
-- Transition, timeout/cancel, and breadcrumb semantics are docs-defined but non-active.
+- Transition, timeout/cancel, and breadcrumb semantics now include minimal active guarded-mode runtime handling.
 Target intent:
 - Implement minimal internal runtime handling for step transitions and timeout/cancel outcomes with diagnostic breadcrumbs.
 Guardrail:
 - No public cancel/review/observability surfaces.
 Fallback/default posture:
 - Deterministic safe terminal handling on unexpected states; default path remains single-step.
+Implementation status:
+- Implemented in this slice (runtime + docs sync).
+Manual verify:
+- Confirm guarded mode transition handling is runtime-active for internal outcomes `continue/stop/fail/needs_review`.
+- Confirm guarded-mode timeout and cancel signals resolve through deterministic bounded fail-terminal handling.
+- Confirm breadcrumbs remain internal-only and are not exposed via `/api/chat` response fields.
+- Confirm default single-step path remains unchanged when continuation gate is deny/default.
+- Confirm no endpoint/public-field/UI contract expansion occurred.
 
 ### Step 4 — Regression verification + DoD closeout + docs sync
 Current reality:
@@ -6269,7 +6277,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Implement Phase 55 Step 3 — Wire transition + timeout/cancel + internal breadcrumbs
+→ Implement Phase 55 Step 4 — Regression verification + DoD closeout + docs sync
 
 ---
 

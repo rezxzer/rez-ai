@@ -553,6 +553,36 @@ How to verify:
 - Confirm `/api/chat` response contract and UI behavior remain unchanged (no public task/state/review fields).
 Date: 2026-03-09
 
+### PHASE 55 Step 3 — Runtime stability layer (transition + timeout/cancel + breadcrumbs)
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added guarded-mode-only internal transition handling for `continue/stop/fail/needs_review`.
+- Added internal timeout/cancel stability handling for guarded mode with deterministic fail-terminal behavior.
+- Added minimal internal-only breadcrumbs for guarded runtime (`execution_start`, `step_start`, `transition`, `step_end`, `execution_end`).
+- Preserved default safety posture: single-step baseline remains active when continuation gate is deny/default.
+- Preserved external contract surfaces: no `/api/chat` request/response changes, no new endpoints, no UI changes, no public task/state/review exposure.
+- Updated Phase 55 docs status to in-progress with Step 1-3 completed and advanced next step to Phase 55 Step 4.
+Current reality:
+- Guarded loop runtime is now internally bounded and stabilized while remaining internal-only.
+Target intent:
+- Establish deterministic guarded-path runtime stability before final regression closeout.
+Guardrail:
+- Keep all public contract and UI surfaces unchanged.
+Fallback/default posture:
+- Any timeout/cancel/invalid transition in guarded mode terminates deterministically through bounded failure handling.
+How to verify:
+- Confirm guarded mode transition outcomes (`continue/stop/fail/needs_review`) are handled internally and do not add public fields.
+- Confirm guarded-mode timeout and cancel internal signals produce deterministic fail-terminal responses.
+- Confirm guarded-mode breadcrumbs are internal-only and best-effort (no public observability surface).
+- Confirm default deny path remains single-step (`maxSteps: 1`) with unchanged `/api/chat` behavior.
+- Confirm no new routes/endpoints/UI behavior changes were introduced.
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
