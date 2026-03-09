@@ -6438,7 +6438,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next cleanup or hardening slice after Phase 57 provider stabilization
+→ Define next narrow UX hardening slice after Phase 58 KB clarity pass
 
 ---
 
