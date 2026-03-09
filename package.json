@@ -10,7 +10,8 @@
   "scripts": {
     "kb:build": "node scripts/kb_build.js",
     "backend": "node server.js",
-    "ui": "cd apps/ui && npm run dev"
+    "ui": "cd apps/ui && npm run dev",
+    "check:providers": "node scripts/provider_regression_check.js"
   },
   "keywords": [],
   "author": "",
