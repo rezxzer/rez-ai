@@ -446,6 +446,33 @@ function assertGuardedExecutionBudget(startedAtMs, stabilityConfig) {
     );
 }
 
+function assertGuardedResilienceCheckpoint({
+    checkpoint,
+    startedAtMs,
+    stabilityConfig,
+    runtimeBreadcrumbs = null,
+}) {
+    const stage = String(checkpoint || "unspecified").trim() || "unspecified";
+    // Cancel precedence is deterministic and always checked before budget.
+    try {
+        assertGuardedExecutionNotCancelled(stabilityConfig);
+    } catch (error) {
+        runtimeBreadcrumbs?.add("guarded_cancel_terminal", { checkpoint: stage });
+        throw error;
+    }
+    try {
+        assertGuardedExecutionBudget(startedAtMs, stabilityConfig);
+    } catch (error) {
+        runtimeBreadcrumbs?.add("guarded_timeout_terminal", { checkpoint: stage });
+        throw error;
+    }
+    runtimeBreadcrumbs?.add("guarded_resilience_checkpoint", {
+        checkpoint: stage,
+        executionTimeoutMs: Number(stabilityConfig?.executionTimeoutMs) || GUARDED_RUNTIME_STABILITY_POLICY.defaultExecutionTimeoutMs,
+        stepTimeoutMs: Number(stabilityConfig?.stepTimeoutMs) || GUARDED_RUNTIME_STABILITY_POLICY.defaultStepTimeoutMs,
+    });
+}
+
 async function runProviderStepWithTimeout({ provider, model, messages, temperature, max_tokens, baseUrl, timeoutMs }) {
     let timer = null;
     try {
@@ -990,8 +1017,12 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                     stepIndex,
                     maxSteps: executionBoundary.maxSteps,
                 });
-                assertGuardedExecutionNotCancelled(guardedStability);
-                assertGuardedExecutionBudget(guardedStartedAtMs, guardedStability);
+                assertGuardedResilienceCheckpoint({
+                    checkpoint: "pre_step_start",
+                    startedAtMs: guardedStartedAtMs,
+                    stabilityConfig: guardedStability,
+                    runtimeBreadcrumbs,
+                });
             }
             const providerResult = guardedModeActive
                 ? await runProviderStepWithTimeout({
@@ -1022,6 +1053,12 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                 : toAnswerText(out);
 
             if (guardedModeActive) {
+                assertGuardedResilienceCheckpoint({
+                    checkpoint: "post_step_response",
+                    startedAtMs: guardedStartedAtMs,
+                    stabilityConfig: guardedStability,
+                    runtimeBreadcrumbs,
+                });
                 const transition = resolveGuardedTransitionPolicy({
                     stepIndex,
                     maxSteps: executionBoundary.maxSteps,
@@ -1040,6 +1077,12 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                     reason: transition.reason,
                 });
                 if (transition.action === GUARDED_TRANSITION_ACTIONS.CONTINUE_STEP) {
+                    assertGuardedResilienceCheckpoint({
+                        checkpoint: "pre_continuation_handoff",
+                        startedAtMs: guardedStartedAtMs,
+                        stabilityConfig: guardedStability,
+                        runtimeBreadcrumbs,
+                    });
                     stepMessages = [
                         ...stepMessages,
                         { role: "assistant", content: reply },
