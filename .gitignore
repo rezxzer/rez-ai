@@ -3,12 +3,20 @@ models/
 *.gguf
 *.bin
 
+# dependencies
+node_modules/
+apps/ui/node_modules/
+
 # local configs / secrets
 .env
 .env.local
 apps/ui/.env.local
 configs/local/
 data/cache/
+
+# build outputs
+dist/
+build/
 
 # OS / editor
 .DS_Store
