@@ -115,8 +115,14 @@ const SINGLE_STEP_EXECUTION_POLICY = Object.freeze({
 });
 const DEFAULT_RUNTIME_CONTINUATION_GATE = Object.freeze({
   allowContinuation: false,
+  maxSteps: 1,
   reason: "default_deny",
   source: "phase55_default_safe",
+});
+const GUARDED_RUNTIME_LOOP_POLICY = Object.freeze({
+  mode: "guarded_loop",
+  hardMaxSteps: 2,
+  defaultMaxSteps: 2,
 });
 
 const makeInternalTaskId = () => {
@@ -151,6 +157,11 @@ const normalizeRuntimeTaskState = (stateLike) => {
   if (state === RUNTIME_TASK_STATES.SUCCEEDED) return RUNTIME_TASK_STATES.SUCCEEDED;
   if (state === RUNTIME_TASK_STATES.FAILED) return RUNTIME_TASK_STATES.FAILED;
   return RUNTIME_TASK_STATES.CREATED;
+};
+
+const resolveGuardedLoopMaxSteps = () => {
+  const defaultSteps = GUARDED_RUNTIME_LOOP_POLICY.defaultMaxSteps;
+  return Math.min(defaultSteps, GUARDED_RUNTIME_LOOP_POLICY.hardMaxSteps);
 };
 
 const transitionRuntimeTaskState = (taskLike, nextStateLike) => {
@@ -220,12 +231,14 @@ const resolveInternalContinuationGate = ({ req, runtimeScope, runtimeTask } = {}
   if (envAllow && preconditionsMet) {
     return {
       allowContinuation: true,
+      maxSteps: resolveGuardedLoopMaxSteps(),
       reason: "explicit_internal_allow",
       source: "env_rez_internal_allow_continuation",
     };
   }
   return {
     ...DEFAULT_RUNTIME_CONTINUATION_GATE,
+    maxSteps: DEFAULT_RUNTIME_CONTINUATION_GATE.maxSteps,
     reason: envAllow ? "preconditions_not_met" : DEFAULT_RUNTIME_CONTINUATION_GATE.reason,
     source: envAllow
       ? "env_rez_internal_allow_continuation"

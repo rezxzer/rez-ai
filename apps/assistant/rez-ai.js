@@ -52,8 +52,17 @@ const SINGLE_STEP_EXECUTION_POLICY = Object.freeze({
     allowChainedExecution: false,
     stepType: "provider_chat_single_step",
 });
+const GUARDED_LOOP_EXECUTION_POLICY = Object.freeze({
+    mode: "guarded_loop",
+    hardMaxSteps: 2,
+    defaultMaxSteps: 2,
+    allowChainedExecution: true,
+    stepType: "provider_chat_guarded_step",
+    continuationPrompt: "Internal continuation: refine the previous answer and provide a final response.",
+});
 const DEFAULT_RUNTIME_CONTINUATION_GATE = Object.freeze({
     allowContinuation: false,
+    maxSteps: 1,
     reason: "default_deny",
     source: "phase55_default_safe",
 });
@@ -172,7 +181,13 @@ function normalizeExecutionFailure(errorLike) {
     );
 }
 
-function createSingleStepExecutionBoundary({ runtimeTask, runtimeHooks, userText }) {
+function normalizeGuardedLoopMaxSteps(maxStepsLike) {
+    const parsed = Number.parseInt(String(maxStepsLike ?? ""), 10);
+    if (!Number.isFinite(parsed) || parsed < 2) return GUARDED_LOOP_EXECUTION_POLICY.defaultMaxSteps;
+    return Math.min(parsed, GUARDED_LOOP_EXECUTION_POLICY.hardMaxSteps);
+}
+
+function createRuntimeExecutionBoundary({ runtimeTask, runtimeHooks, userText }) {
     const task = normalizeRuntimeTask(runtimeTask, runtimeHooks?.scope || null);
     const normalizedUserText = typeof userText === "string" ? userText.trim() : "";
     if (task.state !== RUNTIME_TASK_STATES.RUNNING) {
@@ -198,19 +213,30 @@ function createSingleStepExecutionBoundary({ runtimeTask, runtimeHooks, userText
             runtimeTask: task,
         }
     );
+    const allowGuardedLoop = continuationGate.allowContinuation === true && !unsupportedScope;
+    const maxSteps = allowGuardedLoop
+        ? normalizeGuardedLoopMaxSteps(continuationGate.maxSteps)
+        : SINGLE_STEP_EXECUTION_POLICY.maxSteps;
+    const mode = allowGuardedLoop
+        ? GUARDED_LOOP_EXECUTION_POLICY.mode
+        : SINGLE_STEP_EXECUTION_POLICY.mode;
+    const allowChainedExecution = allowGuardedLoop
+        ? GUARDED_LOOP_EXECUTION_POLICY.allowChainedExecution
+        : SINGLE_STEP_EXECUTION_POLICY.allowChainedExecution;
+    const stepType = allowGuardedLoop
+        ? GUARDED_LOOP_EXECUTION_POLICY.stepType
+        : SINGLE_STEP_EXECUTION_POLICY.stepType;
 
     return {
-        mode: SINGLE_STEP_EXECUTION_POLICY.mode,
-        maxSteps: SINGLE_STEP_EXECUTION_POLICY.maxSteps,
-        stepCount: 1,
-        allowChainedExecution: SINGLE_STEP_EXECUTION_POLICY.allowChainedExecution,
-        steps: [
-            {
-                index: 1,
-                type: SINGLE_STEP_EXECUTION_POLICY.stepType,
-                terminal: true,
-            },
-        ],
+        mode,
+        maxSteps,
+        stepCount: maxSteps,
+        allowChainedExecution,
+        steps: Array.from({ length: maxSteps }, (_, idx) => ({
+            index: idx + 1,
+            type: stepType,
+            terminal: idx === maxSteps - 1,
+        })),
         deniedReason: unsupportedScope ? "unsupported_scope_mode" : null,
         continuationGate,
     };
@@ -227,6 +253,8 @@ function resolveRuntimeContinuationGateFromEnv(rawGateEnv, { runtimeHooks, runti
     const requestedAllow = parsed?.allowContinuation === true;
     const source = String(parsed?.source || "").trim() || DEFAULT_RUNTIME_CONTINUATION_GATE.source;
     const reason = String(parsed?.reason || "").trim() || DEFAULT_RUNTIME_CONTINUATION_GATE.reason;
+    const maxStepsRaw = Number.parseInt(String(parsed?.maxSteps ?? ""), 10);
+    const maxSteps = Number.isFinite(maxStepsRaw) ? maxStepsRaw : DEFAULT_RUNTIME_CONTINUATION_GATE.maxSteps;
     const taskState = normalizeRuntimeTaskState(runtimeTask?.state);
     const isLocalMode = runtimeHooks?.isLocalMode === true;
     const allowContinuation = requestedAllow
@@ -237,6 +265,7 @@ function resolveRuntimeContinuationGateFromEnv(rawGateEnv, { runtimeHooks, runti
     if (allowContinuation) {
         return {
             allowContinuation: true,
+            maxSteps: normalizeGuardedLoopMaxSteps(maxSteps),
             reason,
             source,
         };
@@ -244,43 +273,79 @@ function resolveRuntimeContinuationGateFromEnv(rawGateEnv, { runtimeHooks, runti
     if (requestedAllow) {
         return {
             ...DEFAULT_RUNTIME_CONTINUATION_GATE,
+            maxSteps: DEFAULT_RUNTIME_CONTINUATION_GATE.maxSteps,
             reason: "preconditions_not_met",
             source,
         };
     }
     return {
         ...DEFAULT_RUNTIME_CONTINUATION_GATE,
+        maxSteps: DEFAULT_RUNTIME_CONTINUATION_GATE.maxSteps,
         source,
     };
 }
 
-function assertSingleStepExecutionBoundary(boundary) {
-    if (!boundary || boundary.mode !== SINGLE_STEP_EXECUTION_POLICY.mode) {
-        throw makeExecutionError("execution_invalid_shape", "Execution boundary mode must be single_step");
-    }
-    if (!Number.isFinite(boundary.maxSteps) || boundary.maxSteps !== 1) {
-        throw makeExecutionError("execution_invalid_shape", "Execution boundary maxSteps must be 1");
-    }
-    if (!Number.isFinite(boundary.stepCount) || boundary.stepCount !== 1) {
-        throw makeExecutionError("execution_invalid_shape", "Execution boundary stepCount must be 1");
-    }
-    if (boundary.allowChainedExecution !== false) {
-        throw makeExecutionError("execution_invalid_shape", "Execution boundary must deny chained execution");
-    }
-    if (!Array.isArray(boundary.steps) || boundary.steps.length !== 1) {
-        throw makeExecutionError("execution_invalid_shape", "Execution boundary must contain exactly one step");
-    }
-    const step = boundary.steps[0];
-    if (!step || step.type !== SINGLE_STEP_EXECUTION_POLICY.stepType || step.index !== 1 || step.terminal !== true) {
-        throw makeExecutionError("execution_invalid_shape", "Execution boundary step definition is invalid");
+function assertRuntimeExecutionBoundary(boundary) {
+    if (!boundary || typeof boundary !== "object") {
+        throw makeExecutionError("execution_invalid_shape", "Execution boundary payload is required");
     }
     const gate = boundary.continuationGate || {};
     if (typeof gate.allowContinuation !== "boolean") {
         throw makeExecutionError("execution_invalid_shape", "Execution continuation gate must define boolean allowContinuation");
     }
-    if (gate.allowContinuation === true && (boundary.maxSteps !== 1 || boundary.allowChainedExecution !== false)) {
-        throw makeExecutionError("execution_invalid_shape", "Continuation gate cannot alter single-step safety boundary in Phase 55 Step 1");
+
+    if (boundary.mode === SINGLE_STEP_EXECUTION_POLICY.mode) {
+        if (!Number.isFinite(boundary.maxSteps) || boundary.maxSteps !== 1) {
+            throw makeExecutionError("execution_invalid_shape", "Execution boundary maxSteps must be 1");
+        }
+        if (!Number.isFinite(boundary.stepCount) || boundary.stepCount !== 1) {
+            throw makeExecutionError("execution_invalid_shape", "Execution boundary stepCount must be 1");
+        }
+        if (boundary.allowChainedExecution !== false) {
+            throw makeExecutionError("execution_invalid_shape", "Execution boundary must deny chained execution");
+        }
+        if (!Array.isArray(boundary.steps) || boundary.steps.length !== 1) {
+            throw makeExecutionError("execution_invalid_shape", "Execution boundary must contain exactly one step");
+        }
+        const step = boundary.steps[0];
+        if (!step || step.type !== SINGLE_STEP_EXECUTION_POLICY.stepType || step.index !== 1 || step.terminal !== true) {
+            throw makeExecutionError("execution_invalid_shape", "Execution boundary step definition is invalid");
+        }
+        if (gate.allowContinuation === true && (boundary.maxSteps !== 1 || boundary.allowChainedExecution !== false)) {
+            throw makeExecutionError("execution_invalid_shape", "Single-step mode cannot allow chained execution");
+        }
+        return;
     }
+
+    if (boundary.mode === GUARDED_LOOP_EXECUTION_POLICY.mode) {
+        if (gate.allowContinuation !== true) {
+            throw makeExecutionError("execution_invalid_shape", "Guarded loop mode requires continuation gate allowContinuation=true");
+        }
+        const expectedMaxSteps = normalizeGuardedLoopMaxSteps(boundary.maxSteps);
+        if (!Number.isFinite(boundary.maxSteps) || boundary.maxSteps !== expectedMaxSteps) {
+            throw makeExecutionError("execution_invalid_shape", "Guarded loop maxSteps must satisfy bounded hard cap");
+        }
+        if (!Number.isFinite(boundary.stepCount) || boundary.stepCount !== boundary.maxSteps) {
+            throw makeExecutionError("execution_invalid_shape", "Guarded loop stepCount must equal maxSteps");
+        }
+        if (boundary.allowChainedExecution !== true) {
+            throw makeExecutionError("execution_invalid_shape", "Guarded loop boundary must allow chained execution");
+        }
+        if (!Array.isArray(boundary.steps) || boundary.steps.length !== boundary.maxSteps) {
+            throw makeExecutionError("execution_invalid_shape", "Guarded loop must define one step entry per bounded step");
+        }
+        for (let i = 0; i < boundary.steps.length; i++) {
+            const step = boundary.steps[i];
+            const expectedIndex = i + 1;
+            const expectedTerminal = expectedIndex === boundary.maxSteps;
+            if (!step || step.type !== GUARDED_LOOP_EXECUTION_POLICY.stepType || step.index !== expectedIndex || step.terminal !== expectedTerminal) {
+                throw makeExecutionError("execution_invalid_shape", "Guarded loop step definition is invalid");
+            }
+        }
+        return;
+    }
+
+    throw makeExecutionError("execution_invalid_shape", "Execution boundary mode is invalid");
 }
 
 function getRequestedRuntimeMode(scopeLike) {
@@ -597,17 +662,17 @@ function buildKBContext(hits, maxChars = 2500) {
 async function providerChat({ systemPrompt, userText, k, providerName, modelName, runtimeScope, runtimeTask }) {
     try {
         const runtimeHooks = buildRuntimeScopeHooks(runtimeScope);
-        const executionBoundary = createSingleStepExecutionBoundary({
+        const executionBoundary = createRuntimeExecutionBoundary({
             runtimeTask,
             runtimeHooks,
             userText,
         });
-        assertSingleStepExecutionBoundary(executionBoundary);
+        assertRuntimeExecutionBoundary(executionBoundary);
 
         if (executionBoundary.deniedReason === "unsupported_scope_mode" && !runtimeHooks.boundary.fallbackToLocalSafe) {
             throw makeExecutionError(
                 "execution_unsupported",
-                "Unsupported scope mode for single-step execution"
+                "Unsupported scope mode for bounded execution"
             );
         }
         if (!runtimeHooks.boundary.allowNormalBehavior && runtimeHooks.boundary.fallbackToLocalSafe) {
@@ -682,23 +747,45 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
             max_tokens: 512,
         };
         const provider = getProvider(providerName || DEFAULT_PROVIDER);
-        const providerResult = await provider.chat({
-            model: payload.model,
-            messages: payload.messages,
-            temperature: payload.temperature,
-            max_tokens: payload.max_tokens,
-            baseUrl: providerName === "ollama" ? OLLAMA_BASE : LMSTUDIO_BASE,
-        });
-        if (!providerResult?.ok) {
-            throw makeExecutionError(
-                providerResult?.error || "provider_failed",
-                providerResult?.message || "Provider chat failed"
-            );
+        const providerBaseUrl = providerName === "ollama" ? OLLAMA_BASE : LMSTUDIO_BASE;
+        let stepMessages = payload.messages;
+        let stepIndex = 1;
+        let out = {};
+        let reply = "";
+
+        // Deterministic bounded execution:
+        // - single_step mode executes once.
+        // - guarded_loop mode continues until maxSteps hard-cap is reached.
+        while (stepIndex <= executionBoundary.maxSteps) {
+            const providerResult = await provider.chat({
+                model: payload.model,
+                messages: stepMessages,
+                temperature: payload.temperature,
+                max_tokens: payload.max_tokens,
+                baseUrl: providerBaseUrl,
+            });
+            if (!providerResult?.ok) {
+                throw makeExecutionError(
+                    providerResult?.error || "provider_failed",
+                    providerResult?.message || "Provider chat failed"
+                );
+            }
+            out = providerResult.raw || {};
+            reply = typeof providerResult.reply === "string"
+                ? providerResult.reply
+                : toAnswerText(out);
+
+            const shouldContinue = executionBoundary.mode === GUARDED_LOOP_EXECUTION_POLICY.mode
+                && stepIndex < executionBoundary.maxSteps;
+            if (!shouldContinue) break;
+
+            stepMessages = [
+                ...stepMessages,
+                { role: "assistant", content: reply },
+                { role: "user", content: GUARDED_LOOP_EXECUTION_POLICY.continuationPrompt },
+            ];
+            stepIndex += 1;
         }
-        const out = providerResult.raw || {};
-        const reply = typeof providerResult.reply === "string"
-            ? providerResult.reply
-            : toAnswerText(out);
 
         return {
             reply,

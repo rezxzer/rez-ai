@@ -6172,7 +6172,7 @@ Must remain unchanged in Phase 55:
 
 Phase 55 is DONE only if all pass:
 - [x] Internal continuation gate exists with default single-step-preserving posture.
-- [ ] Guarded multi-step runtime path is bounded by explicit hard cap and deterministic terminal exits.
+- [x] Guarded multi-step runtime path is bounded by explicit hard cap and deterministic terminal exits.
 - [ ] Active transition handling covers `continue/stop/fail/needs_review` with deterministic bounded behavior.
 - [ ] Timeout/cancel handling is active only as internal bounded semantics (no public cancel API).
 - [ ] Minimal internal breadcrumb diagnostics exist for guarded path without public exposure.
@@ -6181,7 +6181,7 @@ Phase 55 is DONE only if all pass:
 - [ ] UI flow remains unchanged.
 - [ ] Regression verification covers default single-step path and guarded internal path safety.
 
-Status: In progress (Step 1 implemented)
+Status: In progress (Step 1-2 implemented)
 
 ## 55.3 Minimal Implementation Step Plan (1-4)
 
@@ -6204,13 +6204,21 @@ Manual verify:
 
 ### Step 2 — Activate bounded guarded loop path
 Current reality:
-- Loop boundary exists as design, but loop runtime activation is not present.
+- Loop boundary and gate wiring now include minimal active guarded-loop runtime path under internal-only allow conditions.
 Target intent:
 - Execute continuation only through guarded bounded loop path with hard cap and deterministic exits.
 Guardrail:
 - No public task/state visibility and no UI behavior changes.
 Fallback/default posture:
 - On invalid state/transition, terminate safely using existing bounded failure posture.
+Implementation status:
+- Implemented in this slice (runtime + docs sync).
+Manual verify:
+- Confirm guarded loop mode activates only when internal continuation gate allow is explicit and preconditions pass.
+- Confirm hard cap is enforced in runtime boundary validation (`maxSteps: 2`) with deterministic stop at cap.
+- Confirm deterministic bounded failure handling remains active for provider/runtime failures in guarded path.
+- Confirm default path remains single-step when continuation gate is absent/deny (no public behavior change).
+- Confirm `/api/chat` response shape and endpoint surface remain unchanged.
 
 ### Step 3 — Wire transition + timeout/cancel + internal breadcrumbs
 Current reality:
@@ -6261,7 +6269,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Implement Phase 55 Step 2 — Activate bounded guarded loop path
+→ Implement Phase 55 Step 3 — Wire transition + timeout/cancel + internal breadcrumbs
 
 ---
 
