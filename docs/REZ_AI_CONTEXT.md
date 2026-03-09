@@ -10,7 +10,7 @@ Use this as bootstrap context for new AI chats.
 - **UI:** `apps/ui` (Vite + React).
 - **Backend:** `server.js` (Node/Express).
 - **Assistant runtime:** `apps/assistant/rez-ai.js` (spawned by backend).
-- **Provider runtime:** LM Studio + Ollama are active provider paths; `remote_openai` exists as placeholder/not implemented.
+- **Provider runtime:** LM Studio is working, Ollama is implemented/env-dependent, and `remote_openai` remains disabled/not implemented (stub path).
 - **Communication flow (baseline):**
   - UI -> `POST /api/chat`
     - core fields: `message`, `systemPrompt`, `useKB`
@@ -19,9 +19,10 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 56 DoD — PASS`.
+- **Current phase:** `PHASE 57 — Provider layer cleanup and stabilization (mini-phase, done)`.
 - **Latest phase closeout:** `PHASE 56 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 57 — Provider layer cleanup and stabilization (mini-phase)`
   - `PHASE 56 Step 4 — Regression verification + DoD closeout + docs consistency cleanup`
   - `PHASE 56 Step 3 — Internal telemetry baseline schema`
   - `PHASE 56 Step 2 — Timeout/cancel resilience hardening`
@@ -179,6 +180,11 @@ Use this as bootstrap context for new AI chats.
   - Verified KB hybrid retrieval and lexical fallback behavior under current deterministic local embedding posture.
   - Verified UI send/receive, refresh persistence, and KB append/manual rebuild flow with no visual contract changes.
   - Cleaned docs drift: stale/contradictory next-step wording and stale provider-status wording were aligned to current runtime reality.
+- **Phase 57 summary (implemented, cleanup-only):**
+  - UI provider selector is stabilized to deterministic local-only selectable providers (`lmstudio`, `ollama`).
+  - `remote_openai` remains internal stub/not implemented and is represented as disabled in provider UI copy.
+  - Provider dispatch behavior in backend/assistant remains deterministic and unchanged (`lmstudio` default, explicit provider routing preserved).
+  - No `/api/chat` contract changes, no new endpoints, no guarded runtime/KB behavior changes, and no layout-level UI redesign.
 - **Phase 52 Step 1 summary (implemented):**
   - Internal task unit envelope exists for active `/api/chat` execution path.
   - Envelope is internal-only and non-persistent.
@@ -203,7 +209,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Define next phase roadmap after Phase 56 closeout.
+  - Define the next cleanup or hardening slice after Phase 57 stabilization.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
@@ -496,7 +502,7 @@ Use this as bootstrap context for new AI chats.
   - global/local KB + memory assumptions
   - no runtime collaboration/membership layer yet
 - **Next step:**
-  - Define next phase roadmap after Phase 56 closeout.
+  - Define the next cleanup or hardening slice after Phase 57 stabilization.
 
 ## 4) Important rules
 - Do not change `/api/chat` contract shape/keys unless explicitly requested.
