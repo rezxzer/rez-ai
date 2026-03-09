@@ -19,9 +19,10 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 57 — Provider layer cleanup and stabilization (mini-phase, done)`.
+- **Current phase:** `PHASE 58 — KB experience upgrade (clarity + usability, done)`.
 - **Latest phase closeout:** `PHASE 56 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 58 — KB experience upgrade (clarity + usability)`
   - `PHASE 57 — Provider layer cleanup and stabilization (mini-phase)`
   - `PHASE 56 Step 4 — Regression verification + DoD closeout + docs consistency cleanup`
   - `PHASE 56 Step 3 — Internal telemetry baseline schema`
@@ -185,6 +186,11 @@ Use this as bootstrap context for new AI chats.
   - `remote_openai` remains internal stub/not implemented and is represented as disabled in provider UI copy.
   - Provider dispatch behavior in backend/assistant remains deterministic and unchanged (`lmstudio` default, explicit provider routing preserved).
   - No `/api/chat` contract changes, no new endpoints, no guarded runtime/KB behavior changes, and no layout-level UI redesign.
+- **Phase 58 summary (implemented, KB UX-only):**
+  - KB panel wording is clarified around append path, manual rebuild path, and expected request-time behavior.
+  - User guidance now makes the flow explicit: append to `data/kb/notes.txt` -> run `npm run kb:build` -> send with KB enabled.
+  - KB-related visibility in UI is improved with clearer status labels and last-response KB hit count.
+  - No KB architecture/retrieval algorithm/runtime/provider/public-contract changes were introduced.
 - **Phase 52 Step 1 summary (implemented):**
   - Internal task unit envelope exists for active `/api/chat` execution path.
   - Envelope is internal-only and non-persistent.
@@ -209,7 +215,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Define the next cleanup or hardening slice after Phase 57 stabilization.
+  - Define next narrow UX hardening slice after Phase 58 KB clarity pass.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
@@ -502,7 +508,7 @@ Use this as bootstrap context for new AI chats.
   - global/local KB + memory assumptions
   - no runtime collaboration/membership layer yet
 - **Next step:**
-  - Define the next cleanup or hardening slice after Phase 57 stabilization.
+  - Define next narrow UX hardening slice after Phase 58 KB clarity pass.
 
 ## 4) Important rules
 - Do not change `/api/chat` contract shape/keys unless explicitly requested.

@@ -223,6 +223,23 @@ html, body, #root {
   border-radius: 999px;
 }
 .pill-warn { color: var(--warning); border: 1px solid rgba(245,158,11,.35); background: rgba(245,158,11,.12); }
+.pill-muted { color: var(--text-muted); border: 1px solid var(--border-color); background: rgba(255,255,255,.03); }
+
+.kb-help-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+.kb-help-list code {
+  color: var(--text-secondary);
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0 4px;
+}
 
 .toggle-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-secondary); margin-top: 10px; }
 .toggle {

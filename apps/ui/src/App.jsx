@@ -452,6 +452,7 @@ function App() {
   const [lastProviderName, setLastProviderName] = useState(null)
   const [lastUsageMode, setLastUsageMode] = useState('approx')
   const [lastKbEnabled, setLastKbEnabled] = useState(false)
+  const [lastKBHits, setLastKBHits] = useState(0)
   const [lastKBCitations, setLastKBCitations] = useState([])
   const [lastKBTopK, setLastKBTopK] = useState(4)
   const [providerId, setProviderId] = useState(() => {
@@ -752,6 +753,14 @@ function App() {
     if (providerId === 'ollama') return lastModelName || ollamaModelLabel
     return healthUi.modelHint || lastModelName || fallbackModelLabel
   }, [selectedModel, providerId, healthUi.modelHint, lastModelName])
+  const kbPanelStatusLabel = useMemo(() => (
+    useKB ? 'Enabled (manual rebuild flow)' : 'Disabled'
+  ), [useKB])
+  const kbPanelFlowHint = useMemo(() => (
+    rebuildHelperChatId === activeChatId
+      ? 'Step 2 ready: use "Copy rebuild command" in MEMORY, run it, then send with Use KB ON.'
+      : 'Step 1: Save to Memory. Step 2: run kb:build. Step 3: send message with Use KB ON.'
+  ), [rebuildHelperChatId, activeChatId])
   const visibleCitations = useMemo(() => {
     const src = Array.isArray(lastKBCitations) ? lastKBCitations : []
     if (!src.length) return []
@@ -2119,7 +2128,7 @@ function App() {
   const copyRebuildCommand = async () => {
     try {
       await navigator.clipboard.writeText('npm run kb:build')
-      setNotice('Copied: npm run kb:build')
+      setNotice('Copied: npm run kb:build. Next: run it in terminal, then send with Use KB ON.')
     } catch (err) {
       console.error('Copy rebuild command failed:', err)
       setError('Copy failed. Check browser permissions.')
@@ -2133,7 +2142,7 @@ function App() {
       return
     }
 
-    const ok = window.confirm('Append these notes to data/kb/notes.txt ?')
+    const ok = window.confirm('Append these notes to data/kb/notes.txt? (Rebuild required afterward)')
     if (!ok) return
 
     try {
@@ -2151,7 +2160,7 @@ function App() {
       }
       setRebuildHelperChatId(activeChat?.id || null)
       const fileHint = data?.meta?.path ? ` (${data.meta.path})` : ''
-      setNotice(`Saved to Memory${fileHint}. Run kb:build to update index.`)
+      setNotice(`Saved to Memory${fileHint}. Next: run npm run kb:build, then send with Use KB ON.`)
     } catch (err) {
       console.error('KB append failed:', err)
       setError(`KB save failed: ${err.message || 'Unknown error'}`)
@@ -2753,6 +2762,7 @@ function App() {
           setLastModelName(typeof meta?.model === 'string' ? meta.model : null)
           setLastProviderName(typeof meta?.provider === 'string' ? meta.provider : providerId)
           setLastKbEnabled(Boolean(meta?.kb?.enabled))
+          setLastKBHits(Number.isFinite(meta?.kb?.hits) ? meta.kb.hits : 0)
           setLastKBCitations(Array.isArray(meta?.kb?.citations) ? meta.kb.citations : [])
           setLastKBTopK(Number.isFinite(meta?.kb?.topK) ? meta.kb.topK : 4)
           recordOpsSnapshot({
@@ -3313,15 +3323,25 @@ function App() {
           <div className="kb-status">
             <div className="kb-row">
               <span className="kb-label">KB Status</span>
-              <span className="pill pill-warn">Manual rebuild</span>
+              <span className={`pill ${useKB ? 'pill-warn' : 'pill-muted'}`}>{kbPanelStatusLabel}</span>
+            </div>
+            <div className="kb-row">
+              <span className="kb-label">Last response KB hits</span>
+              <span className="kb-label">{lastKBHits}</span>
             </div>
 
             <label className="toggle-row">
-              <span>Use KB (manual refresh)</span>
+              <span>Use KB for next request</span>
               <div className={`toggle ${useKB ? 'active' : ''}`} onClick={() => setUseKB(!useKB)}>
                 <div className="toggle-thumb" />
               </div>
             </label>
+            <div className="kb-help-list">
+              <div>• Append path: <code>/api/kb/append</code> → <code>data/kb/notes.txt</code></div>
+              <div>• Rebuild path: run <code>npm run kb:build</code> manually</div>
+              <div>• Retrieval: Use KB ON uses hybrid when vectors are valid; lexical fallback is automatic otherwise</div>
+              <div>• {kbPanelFlowHint}</div>
+            </div>
 
             {/* Debug toggle (innovation) */}
             <label className="toggle-row" style={{ marginTop: 12 }}>
@@ -3520,7 +3540,11 @@ function App() {
             </div>
             <div className="model-row">
               <span>KB enabled</span>
-              <strong>{lastKbEnabled ? 'true' : 'false'}</strong>
+              <strong>{lastKbEnabled ? 'ON' : 'OFF'}</strong>
+            </div>
+            <div className="model-row">
+              <span>KB hits (last response)</span>
+              <strong>{lastKBHits}</strong>
             </div>
             <div className="model-row">
               <span>Ops requests</span>

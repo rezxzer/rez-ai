@@ -791,6 +791,26 @@ How to verify:
 - Confirm explicit `provider=remote_openai` path remains intentionally not implemented.
 Date: 2026-03-09
 
+### PHASE 58 — KB experience upgrade (clarity + usability, no architecture expansion)
+Status: DONE
+Files touched:
+- apps/ui/src/App.jsx
+- apps/ui/src/App.css
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Clarified KB panel wording so the manual KB flow is explicit and predictable in UI copy.
+- Added visible helper guidance for append path, manual rebuild command, and when KB applies to requests.
+- Improved KB status readability in UI (`ON/OFF`, status pill wording, last-response KB hits).
+- Kept existing architecture and behavior unchanged: no API shape, provider, guarded runtime, or KB algorithm changes.
+How to verify:
+- Append via `Save to Memory` and confirm success notice includes explicit next steps (`npm run kb:build` then send with KB ON).
+- Confirm KB panel shows clear flow hints and last-response KB hit count.
+- Confirm assistant-level verification still reports `mode: hybrid` with vectors present and `mode: lexical` when vectors are missing.
+- Confirm `/api/chat` contract remains unchanged (`ok/reply/meta` success, `ok/error/meta` failure).
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
