@@ -6326,12 +6326,12 @@ Phase 56 is DONE only if all pass:
 - [x] Transition decision breadcrumbs are aligned and remain internal-only.
 - [x] Guarded timeout/cancel resilience checkpoints enforce deterministic precedence and block continuation under cancel/budget exhaustion.
 - [x] Guarded-only internal telemetry baseline schema is active with versioned event types and deterministic detail normalization.
-- [ ] `/api/chat` contract and endpoint surface remain unchanged.
-- [ ] No public task/state/review/observability exposure exists.
-- [ ] UI flow remains unchanged.
-- [ ] Regression verification covers default single-step and guarded internal path safety.
+- [x] `/api/chat` contract and endpoint surface remain unchanged.
+- [x] No public task/state/review/observability exposure exists.
+- [x] UI flow remains unchanged.
+- [x] Regression verification covers default single-step and guarded internal path safety.
 
-Status: In progress (Step 1-3 implemented)
+Status: PHASE 56 DoD — PASS
 
 ## 56.3 Minimal Implementation Step Plan (1-4)
 
@@ -6390,13 +6390,24 @@ Manual verify:
 
 ### Step 4 — Regression verification + DoD closeout + docs sync
 Current reality:
-- Phase 56 DoD closeout is pending evidence completion.
+- Phase 56 Step 1-3 implementation evidence is complete and validated against guardrails.
 Target intent:
-- Verify all guardrails and close phase with explicit PASS/NOT FULLY VERIFIED status.
+- Close phase with explicit PASS status after full regression verification and docs consistency cleanup.
 Guardrail:
 - No scope expansion beyond Phase 56 internal hardening boundaries.
 Fallback/default posture:
 - If evidence is partial, keep phase open and preserve current safe defaults.
+Implementation status:
+- Implemented in this slice (verification + docs closeout sync).
+Manual verify:
+- Confirm backend health and provider health surfaces are reachable/contract-safe.
+- Confirm `/api/chat` success and failure contract remain unchanged (`ok/reply/meta` and `ok/error/meta`).
+- Confirm guarded default deny remains single-step and explicit internal allow remains bounded (`maxSteps: 2` hard cap).
+- Confirm deterministic terminal behavior for timeout/cancel/invalid transition outcomes.
+- Confirm internal `needs_review` terminal remains mapped to public-safe bounded failure semantics.
+- Confirm KB hybrid retrieval and lexical fallback both execute without contract drift.
+- Confirm UI send/receive, refresh persistence, and KB append/manual rebuild flow work with no visual contract changes.
+- Confirm no public task/state/review exposure and no endpoint expansion.
 
 ---
 
@@ -6427,7 +6438,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Implement Phase 56 Step 4 — Regression verification + DoD closeout + docs sync
+→ Define next phase roadmap after Phase 56 closeout
 
 ---
 

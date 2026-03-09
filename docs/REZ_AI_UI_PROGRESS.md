@@ -674,6 +674,35 @@ How to verify:
 - Confirm no new routes/endpoints/public fields are introduced.
 Date: 2026-03-09
 
+### PHASE 56 Step 2 — Timeout/cancel resilience hardening
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Hardened guarded-only timeout/cancel resilience checkpoints with deterministic ordering at `pre_step_start`, `post_step_response`, and `pre_continuation_handoff`.
+- Enforced cancel precedence over budget checks at each guarded checkpoint.
+- Prevented continuation whenever guarded cancel is asserted or guarded execution budget is exhausted.
+- Kept timeout/cancel public terminal mapping stable and safe (`execution_timeout`, `execution_cancelled`).
+- Preserved strict guardrails: no `/api/chat` contract changes, no new endpoints, no UI changes, no public task/state/review exposure, and no public review semantics in error code/message.
+Current reality:
+- Guarded transition policy is active and now includes hardened timeout/cancel resilience checkpoints.
+Target intent:
+- Stabilize guarded runtime timing/control behavior before diagnostics polish.
+Guardrail:
+- Keep all public API/UI surfaces unchanged.
+Fallback/default posture:
+- Any guarded checkpoint cancel/budget failure triggers deterministic bounded terminal behavior.
+How to verify:
+- Confirm default deny path remains single-step (`maxSteps: 1`) and guarded allow remains bounded (`maxSteps: 2`).
+- Confirm timeout/cancel paths terminate deterministically with stable public-safe error codes/messages.
+- Confirm forced invalid transition outcome still maps to deterministic bounded fail terminal.
+- Confirm no new routes/endpoints/public fields and no review semantics in public errors.
+- Confirm docs point next step to `Implement Phase 56 Step 4 — Regression verification + DoD closeout + docs sync`.
+Date: 2026-03-09
+
 ### PHASE 56 Step 3 — Internal telemetry baseline schema
 Status: DONE
 Files touched:
@@ -703,33 +732,44 @@ How to verify:
 - Confirm docs point next step to `Implement Phase 56 Step 4 — Regression verification + DoD closeout + docs sync`.
 Date: 2026-03-09
 
-### PHASE 56 Step 2 — Timeout/cancel resilience hardening
+### PHASE 56 Step 4 — Full regression verification + DoD closeout + docs consistency cleanup
 Status: DONE
 Files touched:
-- apps/assistant/rez-ai.js
 - docs/REZ_AI_MASTER_PLAN.md
 - docs/REZ_AI_CONTEXT.md
 - docs/REZ_AI_UI_PROGRESS.md
 What changed:
-- Hardened guarded-only timeout/cancel resilience checkpoints with deterministic ordering at `pre_step_start`, `post_step_response`, and `pre_continuation_handoff`.
-- Enforced cancel precedence over budget checks at each guarded checkpoint.
-- Prevented continuation whenever guarded cancel is asserted or guarded execution budget is exhausted.
-- Kept timeout/cancel public terminal mapping stable and safe (`execution_timeout`, `execution_cancelled`).
-- Preserved strict guardrails: no `/api/chat` contract changes, no new endpoints, no UI changes, no public task/state/review exposure, and no public review semantics in error code/message.
+- Executed Phase 56 full closeout verification across guarded transition policy, timeout/cancel resilience, and telemetry schema baseline.
+- Verified default deny-by-default single-step behavior and explicit internal allow guarded path with hard-cap (`maxSteps: 2`) remain intact.
+- Verified deterministic terminal behavior for timeout/cancel/invalid-outcome/internal-needs-review mapping and public-safe failure normalization.
+- Verified `/api/chat` success/failure contract remains unchanged and no public task/state/review exposure was introduced.
+- Verified KB hybrid retrieval path and lexical fallback path, plus UI send/receive, refresh persistence, and KB append/manual rebuild flow.
+- Cleaned docs drift: contradictory next-step lines, stale provider-status wording, and Phase 56 section ordering clarity.
 Current reality:
-- Guarded transition policy is active and now includes hardened timeout/cancel resilience checkpoints.
+- Phase 56 guardrail and regression evidence pack is complete and synchronized in docs.
 Target intent:
-- Stabilize guarded runtime timing/control behavior before diagnostics polish.
+- Mark Phase 56 closeout as complete with explicit DoD PASS status.
 Guardrail:
-- Keep all public API/UI surfaces unchanged.
+- No runtime scope expansion; no public API/endpoint/UI contract changes.
 Fallback/default posture:
-- Any guarded checkpoint cancel/budget failure triggers deterministic bounded terminal behavior.
+- Single-step remains default and guarded continuation remains internal-only, gate-controlled, bounded, and deterministic.
 How to verify:
-- Confirm default deny path remains single-step (`maxSteps: 1`) and guarded allow remains bounded (`maxSteps: 2`).
-- Confirm timeout/cancel paths terminate deterministically with stable public-safe error codes/messages.
-- Confirm forced invalid transition outcome still maps to deterministic bounded fail terminal.
-- Confirm no new routes/endpoints/public fields and no review semantics in public errors.
-- Confirm docs point next step to `Implement Phase 56 Step 3 — Internal transition diagnostics polish`.
+- Confirm DoD checklist in `docs/REZ_AI_MASTER_PLAN.md` is fully checked and Phase 56 status is PASS.
+- Confirm `docs/REZ_AI_CONTEXT.md` has no contradictory Phase 56 next-step lines.
+- Confirm `docs/REZ_AI_UI_PROGRESS.md` lists Phase 56 steps in clear execution order (Step 1 -> Step 2 -> Step 3 -> Step 4).
+- Confirm historical provider abstraction note no longer labels Ollama as current stub.
+Date: 2026-03-09
+
+### PHASE 56 DoD — PASS
+Status: DONE
+Files touched:
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+How to verify:
+- Guarded transition policy hardening (Step 1), timeout/cancel resilience hardening (Step 2), and telemetry baseline schema hardening (Step 3) are implemented and verified.
+- Regression closeout evidence confirms `/api/chat` contract unchanged, no new endpoints, no public task/state/review exposure, and UI contract unchanged.
+- `CURRENT NEXT STEP` no longer points to an unfinished Phase 56 step.
 Date: 2026-03-09
 
 ### PHASE 3 Step 4 — Citations in meta
@@ -1938,7 +1978,7 @@ Audit correction note (current runtime reality, history preserved):
 ## Milestone M7.1 — Model Provider Abstraction (Implemented)
 - Added assistant provider layer under `apps/assistant/providers/`:
   - `lmstudio` (active implementation)
-  - `ollama` (stub, returns `provider_not_implemented`)
+  - `ollama` (active implementation; runtime success depends on local Ollama availability)
   - `remote_openai` (stub, returns `provider_not_implemented`)
 - Added provider registry helper: `getProvider(name)` with default `lmstudio`.
 - `rez-ai.js` now routes chat calls through provider abstraction while preserving existing JSON contract:
@@ -1949,14 +1989,14 @@ Audit correction note (current runtime reality, history preserved):
   - assistant default remains LM Studio when not specified
 - UI now has provider selector in sidebar (near Model stats):
   - LM Studio
-  - Ollama (soon)
+  - Ollama
   - Remote OpenAI (soon)
-- If a stub provider is selected, UI shows friendly error message indicating it is not implemented yet.
+- If the non-implemented provider (`remote_openai`) is selected, UI shows a friendly not-implemented message.
 
 ### Provider List (M7.1)
 - `lmstudio` (working)
-- `ollama` (soon)
-- `remote_openai` (soon)
+- `ollama` (working when local Ollama is reachable)
+- `remote_openai` (stub / soon)
 
 ### Files Changed (M7.1)
 - apps/assistant/providers/index.js

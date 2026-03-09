@@ -19,9 +19,10 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 56 — Internal Guarded Transition Policy Hardening` (in progress, Step 3 implemented).
-- **Latest phase closeout:** `PHASE 55 DoD — PASS`.
+- **Current phase:** `PHASE 56 DoD — PASS`.
+- **Latest phase closeout:** `PHASE 56 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 56 Step 4 — Regression verification + DoD closeout + docs consistency cleanup`
   - `PHASE 56 Step 3 — Internal telemetry baseline schema`
   - `PHASE 56 Step 2 — Timeout/cancel resilience hardening`
   - `PHASE 56 Step 1 — Internal transition policy hardening`
@@ -172,6 +173,12 @@ Use this as bootstrap context for new AI chats.
   - Aligned existing guarded telemetry events (`execution`, `step`, `checkpoint`, `transition`) to the normalized schema envelope.
   - Preserved best-effort/non-fatal internal telemetry behavior and kept telemetry internal-only.
   - Preserved strict guardrails: `/api/chat` contract unchanged, no new endpoints/fields, no public task/state/review exposure, no public review semantics, and no UI changes.
+- **Phase 56 Step 4 summary (implemented):**
+  - Completed full regression verification for guarded runtime hardening: default deny path, explicit allow path, hard-cap bounded loop, deterministic terminals, and public-safe failure normalization.
+  - Verified `/api/chat` public success/failure contract and endpoint surface remain unchanged with no public task/state/review exposure.
+  - Verified KB hybrid retrieval and lexical fallback behavior under current deterministic local embedding posture.
+  - Verified UI send/receive, refresh persistence, and KB append/manual rebuild flow with no visual contract changes.
+  - Cleaned docs drift: stale/contradictory next-step wording and stale provider-status wording were aligned to current runtime reality.
 - **Phase 52 Step 1 summary (implemented):**
   - Internal task unit envelope exists for active `/api/chat` execution path.
   - Envelope is internal-only and non-persistent.
@@ -196,7 +203,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Implement Phase 56 Step 4 — Regression verification + DoD closeout + docs sync.
+  - Define next phase roadmap after Phase 56 closeout.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
@@ -489,7 +496,7 @@ Use this as bootstrap context for new AI chats.
   - global/local KB + memory assumptions
   - no runtime collaboration/membership layer yet
 - **Next step:**
-  - Implement Phase 56 Step 3 — Internal transition diagnostics polish.
+  - Define next phase roadmap after Phase 56 closeout.
 
 ## 4) Important rules
 - Do not change `/api/chat` contract shape/keys unless explicitly requested.
