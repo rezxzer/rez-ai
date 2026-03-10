@@ -459,6 +459,7 @@ function App() {
   const [lastKBMode, setLastKBMode] = useState('lexical')
   const [lastKBInfluenced, setLastKBInfluenced] = useState(false)
   const [lastKBSourceCount, setLastKBSourceCount] = useState(0)
+  const [lastKBDecisionHint, setLastKBDecisionHint] = useState(null)
   const [lastKBCitations, setLastKBCitations] = useState([])
   const [lastKBTopK, setLastKBTopK] = useState(4)
   const [providerId, setProviderId] = useState(() => {
@@ -773,6 +774,21 @@ function App() {
     if (mode === 'semantic') return 'semantic'
     return 'lexical'
   }, [lastKbEnabled, lastKBMode])
+  const kbDecisionHintLabel = useMemo(() => {
+    const raw = String(lastKBDecisionHint || '').trim().toLowerCase()
+    const resolved = raw || (lastKbEnabled ? 'unavailable' : 'kb_disabled')
+    const labels = {
+      kb_disabled: 'KB disabled',
+      project_signal: 'Project signal',
+      generic_prompt: 'Generic prompt',
+      low_signal_short_prompt: 'Short low-signal prompt',
+      non_project_prompt: 'Non-project prompt',
+      empty_prompt: 'Empty prompt',
+      unavailable: 'Unavailable'
+    }
+    const friendly = labels[resolved] || 'Other decision'
+    return `${friendly} (${resolved})`
+  }, [lastKBDecisionHint, lastKbEnabled])
   const kbPanelFlowHint = useMemo(() => (
     rebuildHelperChatId === activeChatId
       ? 'Step 2 ready: use "Copy rebuild command" in MEMORY, run it, then send with Use KB ON.'
@@ -2808,10 +2824,14 @@ function App() {
           const kbCitations = Array.isArray(meta?.kb?.citations) ? meta.kb.citations : []
           const kbSourceCount = Number.isFinite(meta?.kb?.sourceCount) ? meta.kb.sourceCount : kbCitations.length
           const kbInfluenced = typeof meta?.kb?.influenced === 'boolean' ? meta.kb.influenced : kbHits > 0
+          const kbDecisionHint = typeof meta?.kb?.decisionHint === 'string'
+            ? meta.kb.decisionHint
+            : (meta?.kb?.enabled ? 'unavailable' : 'kb_disabled')
           setLastKBHits(kbHits)
           setLastKBMode(kbMode)
-          setLastKBInfluenced(Boolean(kbInfluenced))
+          setLastKBInfluenced(kbInfluenced)
           setLastKBSourceCount(Number.isFinite(kbSourceCount) ? kbSourceCount : 0)
+          setLastKBDecisionHint(kbDecisionHint)
           setLastKBCitations(kbCitations)
           setLastKBTopK(Number.isFinite(meta?.kb?.topK) ? meta.kb.topK : 4)
           recordOpsSnapshot({
@@ -3385,6 +3405,10 @@ function App() {
             <div className="kb-row">
               <span className="kb-label">Last retrieval mode</span>
               <span className="kb-label">{kbModeLabel}</span>
+            </div>
+            <div className="kb-row">
+              <span className="kb-label">KB decision (last response)</span>
+              <span className="kb-label">{kbDecisionHintLabel}</span>
             </div>
             <div className="kb-row">
               <span className="kb-label">Last source refs</span>
