@@ -36,6 +36,11 @@ Assistant (rez-ai.js)
 → builds messages array
 → optional KB inject
 → calls selected provider runtime (LM Studio working / Ollama env-dependent; remote_openai disabled stub)
+Provider abstraction clarification:
+- Providers represent inference runtimes rather than specific tools.
+- Current local runtimes (`lmstudio`, `ollama`) are interchangeable implementations of the provider layer.
+- `remote_openai` is a compatibility stub for remote-provider behavior validation, not a production cloud integration.
+- Future hosted/cloud inference runtimes are expected to connect through the same provider abstraction without breaking runtime/API contract boundaries.
 → writes cache
 → prints stdout
 
@@ -4025,7 +4030,7 @@ Future service-boundary semantics:
 - **UI boundary (planned):** UI remains the client interaction surface.
 - **Backend/API boundary (planned):** backend/API remains the contract gateway.
 - **Assistant runtime boundary (planned):** assistant runtime remains the execution layer.
-- **Provider boundary (planned):** providers remain model connectors.
+- **Provider boundary (planned):** providers remain model connectors under one inference-runtime abstraction; local runtimes and future hosted/cloud/hybrid runtimes plug into this layer without contract drift.
 - **Persistence/context boundary (planned):** persistence/context layer becomes future hosted state/context boundary.
 - **Fallback/default posture (current system):** current local deployment assumptions remain active until hosted boundary implementation exists.
 Explicit note:
@@ -6470,6 +6475,21 @@ Manual verify:
 - Confirm next-step intents are not incorrectly bucketed into architecture when phrasing includes refactor terms.
 - Confirm `/api/chat` request/response shape and endpoint surface remain unchanged.
 
+### Phase 62.1 — Provider abstraction clarification in documentation (implemented)
+Current reality:
+- Provider status is documented, but wording can be read as tool-specific unless abstraction boundaries are explicit.
+Target intent:
+- Clarify that providers are inference runtimes, not hard-coupled tools, and keep deployment strategy alignment explicit (`local-first -> hosted/cloud option -> hybrid`).
+Guardrail:
+- Documentation clarification only; no runtime/provider/UI/API contract changes.
+Implementation status:
+- Implemented in this slice (docs wording clarification + consistency sync).
+Manual verify:
+- Confirm docs explicitly state current local runtimes (`lmstudio`, `ollama`) are interchangeable provider-layer implementations.
+- Confirm docs explicitly state future hosted/cloud/hybrid runtimes should connect through the same provider abstraction.
+- Confirm docs explicitly state `remote_openai` is a compatibility stub, not production cloud integration.
+- Confirm `/api/chat` contract stability language remains unchanged.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6499,7 +6519,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next narrow response-quality polish slice after Phase 62 consistency audit
+→ Define next narrow response-quality polish slice after Phase 62.1 provider abstraction clarification
 
 ---
 
