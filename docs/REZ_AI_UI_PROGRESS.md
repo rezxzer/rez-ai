@@ -963,6 +963,24 @@ How to verify:
 - Confirm `/api/chat` contract remains backward-compatible and provider regression checks still pass.
 Date: 2026-03-10
 
+### PHASE 66 — KB relevance calibration
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Calibrated project/dev signal detection to improve borderline prompt coverage (`regression`, `failing tests`, `migration plan`, `refactor plan`, worker/analysis patterns) while preserving deterministic generic skip behavior.
+- Split project signal logic into strong signal + weak technical signal gated by action intent, keeping decision model simple and bounded.
+- Preserved existing reason taxonomy and precedence safety (`project_signal` evaluated before generic starter rules).
+How to verify:
+- Run prompt-class matrix (A/B/C/D): A and C retrieve; B and D skip.
+- Confirm generic technical prompts (`what is an api`, `define module`, `what is migration`) remain skipped.
+- Confirm project-like generic-starter prompts (`explain regression in service`, `summarize failing tests`, `define migration plan for module`) now retrieve.
+- Confirm `/api/chat` contract and `meta.kb` backward compatibility remain unchanged.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

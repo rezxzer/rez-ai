@@ -6535,6 +6535,22 @@ Manual verify:
 - Confirm Phase 64 explainability fields remain stable and safe (`mode`, `sourceCount`, `influenced`, limited citations).
 - Confirm `/api/chat` contract remains backward-compatible and provider regression checks still pass.
 
+### Phase 66 — KB relevance calibration (implemented)
+Current reality:
+- Phase 65 reduced generic KB noise but had narrow project/dev coverage risk for borderline prompts.
+Target intent:
+- Calibrate heuristic signal coverage to reduce false negatives for project-like prompts while preserving generic skip safety.
+Guardrail:
+- Keep heuristic model simple/deterministic; no provider/runtime architecture changes; no `/api/chat` breaking changes; no new endpoints.
+Implementation status:
+- Implemented in this slice (small signal-regex calibration + prompt-matrix verification + docs sync).
+Manual verify:
+- Confirm class A (definite project/dev) prompts still retrieve.
+- Confirm class B (definite generic) prompts still skip.
+- Confirm class C (borderline project-like: regression/migration/failing tests/refactor/worker) now retrieves.
+- Confirm class D (generic technical non-project) still skips.
+- Confirm `/api/chat` contract and `meta.kb` backward compatibility remain unchanged.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6564,7 +6580,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define the next narrow project-brain quality slice for retrieval precision/recall calibration under real project datasets.
+→ Define the next narrow KB/project-brain trust slice for retrieval confidence scoring and low-risk relevance telemetry.
 
 ---
 

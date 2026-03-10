@@ -135,7 +135,10 @@ const TOKEN_STOP_WORDS = new Set([
     // Keep a small Georgian stop-word subset to reduce noisy matching.
     "და", "რომ", "თუ", "რა", "ეს", "არის", "იყო", "თვის", "ზე", "ში"
 ]);
-const PROJECT_BRAIN_SIGNAL_RE = /\b(rez-ai|rez ai|project|phase|roadmap|repo|repository|code|coding|file|component|endpoint|api|backend|frontend|assistant|kb|rag|architecture|design|bug|issue|fix|feature|implement|implementation|workflow|next step|cursor)\b/i;
+const PROJECT_BRAIN_STRONG_SIGNAL_RE = /\b(rez-ai|rez ai|project|phase|roadmap|repo|repository|codebase|architecture|design|bug|issue|fix|feature|implement|implementation|workflow|next step|regression|refactor|incident|runtime|provider|kb|rag|audit)\b/i;
+const PROJECT_BRAIN_WEAK_TECH_SIGNAL_RE = /\b(code|coding|file|component|endpoint|api|backend|frontend|assistant|service|module|migration|worker|tests?|task|cursor)\b/i;
+const PROJECT_BRAIN_ACTION_SIGNAL_RE = /\b(analyze|analysis|triage|review|plan|debug|fix|investigate|status|continue|failing|fail|regression)\b/i;
+const PROJECT_BRAIN_PHRASE_SIGNAL_RE = /\b(failing tests?|migration plan|refactor plan|provider regression|project status|runtime bug|bug in worker)\b/i;
 const GENERIC_PROMPT_RE = /^\s*(hi|hello|hey|thanks|thank you|good morning|good evening)\b|^\s*(tell me a joke|write a poem|who are you|what time is it)\b/i;
 const SIMPLE_MATH_RE = /^\s*what\s+is\s+\d+\s*([+\-*/])\s*\d+\s*\??\s*$|^\s*\d+\s*([+\-*/])\s*\d+\s*$/i;
 const GENERIC_KNOWLEDGE_RE = /^\s*(what is|who is|explain|define|summarize)\b/i;
@@ -868,7 +871,11 @@ function resolveKBRetrievalDecision(userText, requestedTopK) {
         return { shouldRetrieve: false, topK: 0, reason: "empty_prompt" };
     }
 
-    if (PROJECT_BRAIN_SIGNAL_RE.test(normalized)) {
+    const hasStrongProjectSignal = PROJECT_BRAIN_STRONG_SIGNAL_RE.test(normalized)
+        || PROJECT_BRAIN_PHRASE_SIGNAL_RE.test(normalized);
+    const hasWeakProjectSignal = PROJECT_BRAIN_WEAK_TECH_SIGNAL_RE.test(normalized)
+        && PROJECT_BRAIN_ACTION_SIGNAL_RE.test(normalized);
+    if (hasStrongProjectSignal || hasWeakProjectSignal) {
         return { shouldRetrieve: true, topK, reason: "project_signal" };
     }
 
