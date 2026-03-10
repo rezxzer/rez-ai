@@ -6581,6 +6581,21 @@ Manual verify:
 - Confirm UI remains stable when `decisionHint` is missing (fallback resolves to `unavailable`/`kb_disabled` safely).
 - Confirm lint/build/provider regression checks remain green.
 
+### Phase 69 — Project-brain confidence polish (implemented)
+Current reality:
+- Phase 68 trust cue worked, but KB explainability labels and trust presentation needed tighter consistency/readability polish.
+Target intent:
+- Keep the same trust signal behavior while making KB panel wording, spacing, and trust cue presentation cleaner and easier to scan.
+Guardrail:
+- UI-only polish in existing KB/explainability area; no backend/server/provider/runtime/API/architecture changes.
+Implementation status:
+- Implemented in this slice (compact wording alignment + tidy trust cue rendering with friendly label and raw decision token + narrow-layout stability check + docs sync).
+Manual verify:
+- Confirm KB rows now use consistent timing wording (`next request` vs `last response`).
+- Confirm trust cue still exposes both readable text and raw decision value.
+- Confirm fallback mapping remains safe when `decisionHint` is missing (`unavailable`/`kb_disabled`).
+- Confirm lint/build/provider checks remain green and `/api/chat` response shape is unchanged.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6610,7 +6625,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define the next narrow trust/readability refinement slice focused on decision-hint wording polish and reliable dynamic UI verification, without changing runtime behavior.
+→ Define the next narrow trust/readability refinement slice for optional decision taxonomy helper microcopy, without runtime/API changes.
 
 ---
 

@@ -215,6 +215,23 @@ html, body, #root {
 
 .kb-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .kb-label { font-size: 13px; color: var(--text-secondary); }
+.kb-decision-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+  text-align: right;
+}
+.kb-decision-raw {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0 5px;
+  white-space: nowrap;
+}
 
 .pill {
   font-size: 11px;
