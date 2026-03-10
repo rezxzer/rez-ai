@@ -832,6 +832,27 @@ How to verify:
 - Confirm no provider runtime, guarded runtime, or KB retrieval algorithm behavior changed.
 Date: 2026-03-09
 
+### PHASE 60 — Developer/project operator workflow surface
+Status: DONE
+Files touched:
+- apps/ui/src/App.jsx
+- apps/ui/src/App.css
+- apps/ui/src/presets.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Strengthened developer/project operator quick flows inside existing UI surface (`Feature plan`, `Bug breakdown`) without runtime or layout redesign.
+- Added explicit workflow sequence guidance for common execution loop (`feature/bug -> next step -> checklist -> Cursor prompt`).
+- Sharpened welcome/preset/helper wording toward feature build planning, bug-fix breakdown, implementation handoff, and KB-assisted project execution.
+- Kept architecture and behavior unchanged: no `/api/chat` contract changes, no provider changes, no guarded runtime changes, and no KB retrieval algorithm changes.
+How to verify:
+- Confirm OPERATOR TOOLS now exposes `Feature plan` and `Bug breakdown` buttons and updated workflow sequence hint.
+- Confirm welcome message includes developer/project starter flows.
+- Confirm preset descriptions and helper wording are developer/project execution oriented.
+- Send a normal chat message and confirm `/api/chat` success/failure shape remains unchanged.
+Date: 2026-03-09
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

@@ -347,7 +347,7 @@ function App() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: 'Welcome to REZ-AI Local Operator Console.\nShare a practical goal, context, and constraints. I can help break work into executable steps, use KB context when enabled, and keep workflows local-first/private.\nBackend connected to LM Studio at localhost:3001.',
+      content: 'Welcome to REZ-AI Local Operator Console.\nShare a practical goal, context, and constraints. I can help break work into executable steps, use KB context when enabled, and keep workflows local-first/private.\n\nStarter developer/project flows:\n- Feature planning: scope -> dependencies -> implementation steps -> verify checklist\n- Bug breakdown: reproduce -> likely root cause -> minimal fix plan -> regression checks\n- Execution handoff: extract checklist -> draft Cursor-ready prompt -> run + verify\n\nBackend connected to LM Studio at localhost:3001.',
       timestamp: new Date()
     }
   ])
@@ -1992,23 +1992,47 @@ function App() {
 
   const getPresetWorkflowHint = (presetId) => {
     if (presetId === 'dev') {
-      return 'Style: operator-grade code execution, file-level scope, and test-first validation.'
+      return 'Style: developer execution operator; file-level scope, deterministic steps, and test-first validation.'
     }
     if (presetId === 'khronika') {
       return 'Style: Next.js + Supabase operator support, respect RLS/migrations, docs-first, prefer Georgian UI strings.'
     }
-    return 'Style: practical operator guidance, step-by-step outputs, concise and safe.'
+    return 'Style: project operator guidance, step-by-step outputs, concise and safe.'
   }
 
   const makePlanPrompt = (preset, lastText, chatMessages) => {
     const context = summarizeRecentMessages(chatMessages)
     const focus = lastText ? `Main request: ${lastText}` : 'Main request: infer from recent chat.'
     return [
-      'Create a short implementation plan with 5-7 steps.',
+      'Create a short developer/project implementation plan with 5-7 steps.',
       getPresetWorkflowHint(preset?.id),
       focus,
       context,
-      'Output format: Step list + risks + quick validation checklist.'
+      'Output format: Step list + risks + quick validation checklist + first execution step.'
+    ].join('\n')
+  }
+
+  const makeFeaturePlanPrompt = (preset, lastText, chatMessages) => {
+    const context = summarizeRecentMessages(chatMessages)
+    const focus = lastText ? `Feature target: ${lastText}` : 'Feature target: infer from recent chat.'
+    return [
+      'Plan this feature as a project operator.',
+      getPresetWorkflowHint(preset?.id),
+      focus,
+      context,
+      'Output format: scope + affected files/components + implementation steps + edge cases + verification checklist.'
+    ].join('\n')
+  }
+
+  const makeBugBreakdownPrompt = (preset, lastText, chatMessages) => {
+    const context = summarizeRecentMessages(chatMessages)
+    const focus = lastText ? `Bug focus: ${lastText}` : 'Bug focus: infer from recent chat.'
+    return [
+      'Break down this bug for safe implementation.',
+      getPresetWorkflowHint(preset?.id),
+      focus,
+      context,
+      'Output format: reproduction hypothesis + likely root cause + minimal fix strategy + regression checks + next step.'
     ].join('\n')
   }
 
@@ -2978,11 +3002,11 @@ function App() {
       const presetId = String(activePreset?.id || 'general').toLowerCase()
       const taskLine = baseText.trim()
         ? compact(baseText.trim().split(/\r?\n/)[0], 92)
-        : (presetId === 'dev' ? 'Implement a scoped code change safely.' : 'Prepare the next workflow step clearly.')
+        : (presetId === 'dev' ? 'Implement a scoped code change safely with verify steps.' : 'Prepare the next project workflow step clearly.')
       const expectedOutcome = presetId === 'dev'
-        ? 'Patch-ready edits + concise verify bullets.'
+        ? 'Patch-ready edits + concise verify bullets + clear done criteria.'
         : presetId === 'general'
-          ? 'Concise actionable result with clear next step.'
+          ? 'Concise actionable project result with clear next step.'
           : 'Clear feature outcome with edge-case note.'
       const constraintHint = preflightCoreActionConfidenceTier === 'HIGH'
         ? 'Keep scope tight; avoid broad rewrites'
@@ -4104,7 +4128,22 @@ function App() {
               Insert workflow preset
             </button>
           </div>
+          <div className="workflow-playbook">
+            Recommended dev/project flow: <strong>Feature plan</strong> or <strong>Bug breakdown</strong> → <strong>Pick next step</strong> → <strong>Extract checklist</strong> → <strong>Create Cursor prompt</strong>.
+          </div>
           <div className="workflow-buttons">
+            <button
+              className="btn-secondary btn-workflow"
+              onClick={() => fillWorkflowInput(makeFeaturePlanPrompt(activePreset, lastUserText, messages))}
+            >
+              Feature plan
+            </button>
+            <button
+              className="btn-secondary btn-workflow"
+              onClick={() => fillWorkflowInput(makeBugBreakdownPrompt(activePreset, lastUserText, messages))}
+            >
+              Bug breakdown
+            </button>
             <button
               className="btn-secondary btn-workflow"
               onClick={() => fillWorkflowInput(makePlanPrompt(activePreset, lastUserText, messages))}
@@ -4140,7 +4179,7 @@ function App() {
               Create Cursor prompt
             </button>
           </div>
-          <div className="workflow-hint">Buttons draft operator-ready prompts into the composer. Review/edit, then send (no auto-run).</div>
+          <div className="workflow-hint">Buttons draft developer/project operator prompts in the composer. Review/edit, then send (no auto-run).</div>
           <div className="action-buttons">
             <button className="btn-secondary btn-full" onClick={toggleStatus}>
               Insert status snapshot (demo)
