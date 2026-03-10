@@ -1018,6 +1018,25 @@ How to verify:
 - Run `npm --prefix apps/ui run lint`, `npm --prefix apps/ui run build`, and `npm run check:providers`.
 Date: 2026-03-10
 
+### PHASE 69 — Project-brain confidence polish
+Status: DONE
+Files touched:
+- apps/ui/src/App.jsx
+- apps/ui/src/App.css
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Polished KB explainability wording for consistency (`KB ... (next request)` / `KB ... (last response)`) without changing behavior.
+- Kept trust cue raw signal visible while presenting a cleaner friendly label + compact raw token (`decisionHint`) style.
+- Improved compact readability/alignment for trust cue display so it visually fits the existing KB panel style.
+How to verify:
+- Confirm KNOWLEDGE BASE rows are consistent and readable, including `KB decision (last response)` with both friendly and raw values.
+- Confirm narrow layout remains readable with no clipping/overlap in KB rows.
+- Confirm fallback view remains safe when `decisionHint` is missing (`unavailable` when KB enabled, `kb_disabled` when KB disabled).
+- Run `npm --prefix apps/ui run lint`, `npm --prefix apps/ui run build`, `npm run check:providers`, and a small `/api/chat` probe to confirm contract keys remain `ok/reply/meta`.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

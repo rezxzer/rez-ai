@@ -760,9 +760,7 @@ function App() {
     if (providerId === 'ollama') return lastModelName || ollamaModelLabel
     return healthUi.modelHint || lastModelName || fallbackModelLabel
   }, [selectedModel, providerId, healthUi.modelHint, lastModelName])
-  const kbPanelStatusLabel = useMemo(() => (
-    useKB ? 'Enabled (manual rebuild flow)' : 'Disabled'
-  ), [useKB])
+  const kbPanelStatusLabel = useMemo(() => (useKB ? 'ON' : 'OFF'), [useKB])
   const kbInfluenceLabel = useMemo(() => {
     if (!lastKbEnabled) return 'No (KB off)'
     return lastKBInfluenced ? 'Yes' : 'No'
@@ -774,7 +772,7 @@ function App() {
     if (mode === 'semantic') return 'semantic'
     return 'lexical'
   }, [lastKbEnabled, lastKBMode])
-  const kbDecisionHintLabel = useMemo(() => {
+  const kbDecisionHintView = useMemo(() => {
     const raw = String(lastKBDecisionHint || '').trim().toLowerCase()
     const resolved = raw || (lastKbEnabled ? 'unavailable' : 'kb_disabled')
     const labels = {
@@ -787,7 +785,7 @@ function App() {
       unavailable: 'Unavailable'
     }
     const friendly = labels[resolved] || 'Other decision'
-    return `${friendly} (${resolved})`
+    return { friendly, raw: resolved }
   }, [lastKBDecisionHint, lastKbEnabled])
   const kbPanelFlowHint = useMemo(() => (
     rebuildHelperChatId === activeChatId
@@ -3391,27 +3389,30 @@ function App() {
           <h3 className="section-title">KNOWLEDGE BASE</h3>
           <div className="kb-status">
             <div className="kb-row">
-              <span className="kb-label">KB Status</span>
+              <span className="kb-label">KB enabled (next request)</span>
               <span className={`pill ${useKB ? 'pill-warn' : 'pill-muted'}`}>{kbPanelStatusLabel}</span>
             </div>
             <div className="kb-row">
-              <span className="kb-label">Last response KB hits</span>
+              <span className="kb-label">KB hits (last response)</span>
               <span className="kb-label">{lastKBHits}</span>
             </div>
             <div className="kb-row">
-              <span className="kb-label">KB influenced answer</span>
+              <span className="kb-label">KB influenced (last response)</span>
               <span className="kb-label">{kbInfluenceLabel}</span>
             </div>
             <div className="kb-row">
-              <span className="kb-label">Last retrieval mode</span>
+              <span className="kb-label">KB mode (last response)</span>
               <span className="kb-label">{kbModeLabel}</span>
             </div>
             <div className="kb-row">
               <span className="kb-label">KB decision (last response)</span>
-              <span className="kb-label">{kbDecisionHintLabel}</span>
+              <span className="kb-decision-value">
+                <span className="kb-label">{kbDecisionHintView.friendly}</span>
+                <code className="kb-decision-raw">{kbDecisionHintView.raw}</code>
+              </span>
             </div>
             <div className="kb-row">
-              <span className="kb-label">Last source refs</span>
+              <span className="kb-label">KB source refs (last response)</span>
               <span className="kb-label">{lastKBSourceCount}</span>
             </div>
 
