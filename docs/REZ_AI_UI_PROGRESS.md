@@ -853,6 +853,24 @@ How to verify:
 - Send a normal chat message and confirm `/api/chat` success/failure shape remains unchanged.
 Date: 2026-03-09
 
+### PHASE 61 — Operator response structure for developer/project workflows
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added conditional soft operator response-structure guidance in assistant runtime for developer/project intent classes.
+- Added lightweight intent classification coverage for feature planning, bug breakdown, architecture change, implementation help, and next-step selection.
+- Guided preferred response shape (soft): `Goal`, `Context/assumptions`, `Step-by-step plan`, `Next step`, `Cursor prompt (if relevant)`, `Verification checklist`.
+- Kept contracts and architecture stable: no `/api/chat` schema changes, no provider layer changes, no KB retrieval algorithm changes, no new APIs.
+How to verify:
+- Send developer/project prompts (feature, bug, architecture, implementation, next-step) and confirm responses tend toward structured operator format.
+- Confirm existing Phase 60 workflow tools remain aligned with response structure expectations.
+- Confirm `/api/chat` response shape remains unchanged (`ok/reply/meta` success, `ok/error/meta` failure).
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

@@ -19,9 +19,10 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 60 — Developer/project operator workflow surface (done)`.
+- **Current phase:** `PHASE 61 — Operator response structure for developer/project workflows (done)`.
 - **Latest phase closeout:** `PHASE 56 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 61 — Operator response structure for developer/project workflows`
   - `PHASE 60 — Developer/project operator workflow surface`
   - `PHASE 59 — REZ-AI operator mode definition and UX surface clarity`
   - `PHASE 58 — KB experience upgrade (clarity + usability)`
@@ -203,6 +204,11 @@ Use this as bootstrap context for new AI chats.
   - Workflow helper text now recommends a concrete operator sequence (`feature/bug -> next step -> checklist -> Cursor prompt`).
   - Welcome and preset wording are refined toward developer/project execution while keeping layout and runtime behavior unchanged.
   - Changes remain UI/docs-only: no `/api/chat` contract changes, no provider/runtime/KB algorithm changes.
+- **Phase 61 summary (implemented, response-structure-only):**
+  - Assistant runtime now adds lightweight soft response-structure guidance for developer/project operator requests.
+  - Structured preference targets: `Goal`, `Context/assumptions`, `Step-by-step plan`, `Next step`, `Cursor prompt (if relevant)`, and `Verification checklist`.
+  - Guidance is conditional by developer/project intent class (feature planning, bug breakdown, architecture change, implementation help, next-step selection).
+  - Public contract and architecture remain unchanged: no `/api/chat` schema changes, no provider/runtime/KB algorithm changes, no new endpoints.
 - **Phase 52 Step 1 summary (implemented):**
   - Internal task unit envelope exists for active `/api/chat` execution path.
   - Envelope is internal-only and non-persistent.
@@ -227,7 +233,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Define next narrow workflow execution polish slice after Phase 60 developer/project surface pass.
+  - Define next narrow response-quality polish slice after Phase 61 structure pass.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
@@ -520,7 +526,7 @@ Use this as bootstrap context for new AI chats.
   - global/local KB + memory assumptions
   - no runtime collaboration/membership layer yet
 - **Next step:**
-  - Define next narrow workflow execution polish slice after Phase 60 developer/project surface pass.
+  - Define next narrow response-quality polish slice after Phase 61 structure pass.
 
 ## 4) Important rules
 - Do not change `/api/chat` contract shape/keys unless explicitly requested.

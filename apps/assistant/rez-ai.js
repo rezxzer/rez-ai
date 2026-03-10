@@ -719,6 +719,86 @@ function readSystemPrompt() {
     return fs.existsSync(p) ? readUtf8(p) : "You are REZ-AI.";
 }
 
+const OPERATOR_RESPONSE_CASES = {
+    FEATURE_PLANNING: "feature_planning",
+    BUG_BREAKDOWN: "bug_breakdown",
+    ARCHITECTURE_CHANGE: "architecture_change",
+    IMPLEMENTATION_HELP: "implementation_help",
+    NEXT_STEP_SELECTION: "next_step_selection",
+};
+
+function classifyOperatorResponseCase(userText) {
+    const src = String(userText || "").toLowerCase();
+    if (!src.trim()) return null;
+
+    const hasDevProjectDomain = /\b(feature|bug|issue|fix|implement|implementation|architecture|design|refactor|code|repo|file|component|endpoint|api|task|plan|checklist|cursor|project)\b/.test(src);
+    if (!hasDevProjectDomain) return null;
+
+    if (/\b(bug|issue|error|failing|fails|broken|regression|traceback|stack trace)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.BUG_BREAKDOWN;
+    }
+    if (/\b(architecture|design|refactor|module|service|schema|migration|boundary)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.ARCHITECTURE_CHANGE;
+    }
+    if (/\b(next step|what next|first step|where to start|prioritize|priority)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.NEXT_STEP_SELECTION;
+    }
+    if (/\b(feature|capability|screen|flow|user story|epic)\b/.test(src) && /\b(plan|build|implement|design|scope)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.FEATURE_PLANNING;
+    }
+    if (/\b(implement|implementation|code|write|patch|change|update|add|modify)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.IMPLEMENTATION_HELP;
+    }
+    if (/\b(plan)\b/.test(src) && /\b(task|project|change)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.IMPLEMENTATION_HELP;
+    }
+    return null;
+}
+
+function getOperatorResponseCaseFocus(caseType) {
+    switch (caseType) {
+        case OPERATOR_RESPONSE_CASES.FEATURE_PLANNING:
+            return "Feature scope, dependencies, impacted files/components, and verification path.";
+        case OPERATOR_RESPONSE_CASES.BUG_BREAKDOWN:
+            return "Reproduction signal, likely root cause, minimal fix strategy, and regression checks.";
+        case OPERATOR_RESPONSE_CASES.ARCHITECTURE_CHANGE:
+            return "Decision options, tradeoffs, migration risk, and phased implementation plan.";
+        case OPERATOR_RESPONSE_CASES.NEXT_STEP_SELECTION:
+            return "Exactly one high-signal next step with target files and done criteria.";
+        case OPERATOR_RESPONSE_CASES.IMPLEMENTATION_HELP:
+            return "Scoped implementation plan with concrete edits and practical validation.";
+        default:
+            return "";
+    }
+}
+
+function buildOperatorResponseGuidance(userText) {
+    const caseType = classifyOperatorResponseCase(userText);
+    if (!caseType) return "";
+    const caseFocus = getOperatorResponseCaseFocus(caseType);
+    return [
+        "[Operator response shaping - soft preference]",
+        "For developer/project workflow requests, prefer this structure when relevant:",
+        "1) Goal",
+        "2) Context / assumptions",
+        "3) Step-by-step plan",
+        "4) Next step",
+        "5) Cursor prompt (if relevant)",
+        "6) Verification checklist",
+        "Keep answers concise, actionable, and file-aware.",
+        "Do not force this structure when user explicitly requests another format.",
+        `Case focus: ${caseFocus}`,
+    ].join("\n");
+}
+
+function appendPromptBlock(basePrompt, block) {
+    const src = String(basePrompt || "").trim();
+    const blk = String(block || "").trim();
+    if (!blk) return src;
+    if (src.includes(blk)) return src;
+    return src ? `${src}\n\n${blk}` : blk;
+}
+
 function loadKB() {
     const p = path.join(process.cwd(), "data", "cache", "kb.json");
     if (!fs.existsSync(p)) return null;
@@ -1037,9 +1117,11 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         }
         const envSystemPrompt = process.env.REZ_SYSTEM_PROMPT?.trim();
         const baseSystemPrompt = envSystemPrompt || systemPrompt || "";
+        const operatorResponseGuidance = buildOperatorResponseGuidance(userText);
+        const guidedSystemPrompt = appendPromptBlock(baseSystemPrompt, operatorResponseGuidance);
         const finalSystemPrompt = context
-            ? `${baseSystemPrompt}\n\n${context}`.trim()
-            : baseSystemPrompt.trim();
+            ? `${guidedSystemPrompt}\n\n${context}`.trim()
+            : guidedSystemPrompt.trim();
 
         const messages = [];
         if (finalSystemPrompt) {
