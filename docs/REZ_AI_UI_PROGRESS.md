@@ -871,6 +871,24 @@ How to verify:
 - Confirm `/api/chat` response shape remains unchanged (`ok/reply/meta` success, `ok/error/meta` failure).
 Date: 2026-03-10
 
+### PHASE 62 — Operator output examples and workflow consistency audit
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Executed representative prompt consistency probes for Phase 61 structure behavior across feature/bug/architecture/implementation/next-step/code-writing/generic prompts.
+- Identified one intent-detection inconsistency: `next-step` ask with `refactor` keyword matched architecture bucket before next-step bucket.
+- Applied minimal safe tuning in assistant intent precedence (next-step check moved before architecture/bug checks).
+- Re-ran probes and confirmed expected developer/project prompts get structured guidance while generic non-dev remains unstructured.
+How to verify:
+- Run representative probes and confirm `MISSED_EXPECTED: none` and `OVER_STRUCTURED: none`.
+- Confirm `next_step_selection` case focus resolves to next-step guidance after tuning.
+- Confirm `/api/chat` response shape remains unchanged (`ok/reply/meta` success, `ok/error/meta` failure).
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
