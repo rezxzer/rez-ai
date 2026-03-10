@@ -6439,6 +6439,21 @@ Manual verify:
 - Confirm welcome/preset/composer wording now emphasizes developer/project execution guidance.
 - Confirm UI layout remains stable and `/api/chat` request/response shape remains unchanged.
 
+### Phase 61 — Operator response structure for developer/project workflows (implemented)
+Current reality:
+- Operator workflow UI guidance exists, but assistant response shape was not consistently biased to operator-style structured outputs for developer/project asks.
+Target intent:
+- Prefer lightweight structured operator responses for developer/project requests without changing API contract or runtime architecture.
+Guardrail:
+- No runtime architecture expansion, no `/api/chat` schema changes, no provider/KB algorithm changes, no new APIs/endpoints.
+Implementation status:
+- Implemented in this slice (assistant guidance hardening + docs sync).
+Manual verify:
+- Confirm assistant system guidance now conditionally adds soft structure preference for developer/project intent classes.
+- Confirm structured preference includes: `Goal`, `Context / assumptions`, `Step-by-step plan`, `Next step`, `Cursor prompt (if relevant)`, `Verification checklist`.
+- Confirm Phase 60 workflow tools remain aligned (`Feature plan`, `Bug breakdown`, `Pick next step`, `Extract checklist`, `Create Cursor prompt`).
+- Confirm `/api/chat` request/response shape and endpoint surface remain unchanged.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6468,7 +6483,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next narrow workflow execution polish slice after Phase 60 developer/project surface pass
+→ Define next narrow response-quality polish slice after Phase 61 structure pass
 
 ---
 
