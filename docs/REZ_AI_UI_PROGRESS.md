@@ -926,6 +926,25 @@ How to verify:
 - Confirm `/api/chat` still returns stable `ok/reply/meta` with existing request keys.
 Date: 2026-03-10
 
+### PHASE 64 — KB explainability surface
+Status: DONE
+Files touched:
+- server.js
+- apps/ui/src/App.jsx
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Extended backend `meta.kb` pass-through with additive explainability fields (`mode`, `chunksUsed`, `semanticHits`, `lexicalHits`, `mergedHits`, `sourceCount`, `influenced`, limited sanitized `citations`) while preserving existing fields.
+- Added small KB explainability UI rows without layout redesign: `KB influenced answer`, `Last retrieval mode`, and `Last source refs` in KB panel and model stats.
+- Kept explainability surface high-level and safe: no embeddings, no raw retrieval scores, no raw context payload exposure.
+How to verify:
+- Send `/api/chat` with `useKB=true` and confirm `meta.kb` includes existing keys plus optional additive explainability keys.
+- Send `/api/chat` with `useKB=false` and confirm explainability keys degrade safely without contract break.
+- Confirm UI renders KB explainability rows and still behaves when optional fields are absent.
+- Confirm provider regression and contract checks remain stable.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

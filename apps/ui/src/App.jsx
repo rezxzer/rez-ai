@@ -456,6 +456,9 @@ function App() {
   const [lastUsageMode, setLastUsageMode] = useState('approx')
   const [lastKbEnabled, setLastKbEnabled] = useState(false)
   const [lastKBHits, setLastKBHits] = useState(0)
+  const [lastKBMode, setLastKBMode] = useState('lexical')
+  const [lastKBInfluenced, setLastKBInfluenced] = useState(false)
+  const [lastKBSourceCount, setLastKBSourceCount] = useState(0)
   const [lastKBCitations, setLastKBCitations] = useState([])
   const [lastKBTopK, setLastKBTopK] = useState(4)
   const [providerId, setProviderId] = useState(() => {
@@ -759,6 +762,17 @@ function App() {
   const kbPanelStatusLabel = useMemo(() => (
     useKB ? 'Enabled (manual rebuild flow)' : 'Disabled'
   ), [useKB])
+  const kbInfluenceLabel = useMemo(() => {
+    if (!lastKbEnabled) return 'No (KB off)'
+    return lastKBInfluenced ? 'Yes' : 'No'
+  }, [lastKbEnabled, lastKBInfluenced])
+  const kbModeLabel = useMemo(() => {
+    if (!lastKbEnabled) return '—'
+    const mode = String(lastKBMode || '').trim().toLowerCase()
+    if (mode === 'hybrid') return 'hybrid'
+    if (mode === 'semantic') return 'semantic'
+    return 'lexical'
+  }, [lastKbEnabled, lastKBMode])
   const kbPanelFlowHint = useMemo(() => (
     rebuildHelperChatId === activeChatId
       ? 'Step 2 ready: use "Copy rebuild command" in MEMORY, run it, then send with Use KB ON.'
@@ -2789,8 +2803,16 @@ function App() {
           setLastModelName(typeof meta?.model === 'string' ? meta.model : null)
           setLastProviderName(typeof meta?.provider === 'string' ? meta.provider : providerId)
           setLastKbEnabled(Boolean(meta?.kb?.enabled))
-          setLastKBHits(Number.isFinite(meta?.kb?.hits) ? meta.kb.hits : 0)
-          setLastKBCitations(Array.isArray(meta?.kb?.citations) ? meta.kb.citations : [])
+          const kbHits = Number.isFinite(meta?.kb?.hits) ? meta.kb.hits : 0
+          const kbMode = typeof meta?.kb?.mode === 'string' ? meta.kb.mode : 'lexical'
+          const kbCitations = Array.isArray(meta?.kb?.citations) ? meta.kb.citations : []
+          const kbSourceCount = Number.isFinite(meta?.kb?.sourceCount) ? meta.kb.sourceCount : kbCitations.length
+          const kbInfluenced = typeof meta?.kb?.influenced === 'boolean' ? meta.kb.influenced : kbHits > 0
+          setLastKBHits(kbHits)
+          setLastKBMode(kbMode)
+          setLastKBInfluenced(Boolean(kbInfluenced))
+          setLastKBSourceCount(Number.isFinite(kbSourceCount) ? kbSourceCount : 0)
+          setLastKBCitations(kbCitations)
           setLastKBTopK(Number.isFinite(meta?.kb?.topK) ? meta.kb.topK : 4)
           recordOpsSnapshot({
             ok: true,
@@ -3356,6 +3378,18 @@ function App() {
               <span className="kb-label">Last response KB hits</span>
               <span className="kb-label">{lastKBHits}</span>
             </div>
+            <div className="kb-row">
+              <span className="kb-label">KB influenced answer</span>
+              <span className="kb-label">{kbInfluenceLabel}</span>
+            </div>
+            <div className="kb-row">
+              <span className="kb-label">Last retrieval mode</span>
+              <span className="kb-label">{kbModeLabel}</span>
+            </div>
+            <div className="kb-row">
+              <span className="kb-label">Last source refs</span>
+              <span className="kb-label">{lastKBSourceCount}</span>
+            </div>
 
             <label className="toggle-row">
               <span>Use KB for next request</span>
@@ -3573,6 +3607,18 @@ function App() {
             <div className="model-row">
               <span>KB hits (last response)</span>
               <strong>{lastKBHits}</strong>
+            </div>
+            <div className="model-row">
+              <span>KB influenced</span>
+              <strong>{kbInfluenceLabel}</strong>
+            </div>
+            <div className="model-row">
+              <span>KB mode (last response)</span>
+              <strong>{kbModeLabel}</strong>
+            </div>
+            <div className="model-row">
+              <span>KB source refs</span>
+              <strong>{lastKBSourceCount}</strong>
             </div>
             <div className="model-row">
               <span>Ops requests</span>
