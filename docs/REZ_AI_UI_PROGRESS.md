@@ -981,6 +981,25 @@ How to verify:
 - Confirm `/api/chat` contract and `meta.kb` backward compatibility remain unchanged.
 Date: 2026-03-10
 
+### PHASE 67 — Project-brain trust surface
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- server.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added additive trust cue `meta.kb.decisionHint` sourced from existing retrieval decision reason.
+- Kept retrieval behavior unchanged (no heuristic precedence rewrite, no provider/runtime flow changes).
+- Kept public contract backward-compatible; existing `meta.kb` fields remain intact and decision hint is additive only.
+How to verify:
+- Generic prompts with `useKB=true` return `decisionHint` values like `generic_prompt` / `low_signal_short_prompt` with `topK:0` and `hits:0`.
+- Project prompts with `useKB=true` return `decisionHint: project_signal` with normal retrieval metadata.
+- `useKB=false` returns safe `decisionHint: kb_disabled`.
+- Confirm `/api/chat` still returns `ok/reply/meta` and provider regression checks remain unaffected.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

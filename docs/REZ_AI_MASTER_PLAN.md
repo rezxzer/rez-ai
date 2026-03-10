@@ -6551,6 +6551,21 @@ Manual verify:
 - Confirm class D (generic technical non-project) still skips.
 - Confirm `/api/chat` contract and `meta.kb` backward compatibility remain unchanged.
 
+### Phase 67 — Project-brain trust surface (implemented)
+Current reality:
+- Retrieval decision reasons existed internally, but users could not see why KB was retrieved/skipped from the public explainability surface.
+Target intent:
+- Add one minimal, additive trust cue in `meta.kb` so retrieval decision visibility is clearer without changing behavior.
+Guardrail:
+- No runtime/provider architecture changes, no `/api/chat` shape break, no endpoint additions, no UI layout redesign.
+Implementation status:
+- Implemented in this slice (additive `meta.kb.decisionHint` pass-through + verification + docs sync).
+Manual verify:
+- Confirm generic-skip path reports `decisionHint` (`generic_prompt` / `low_signal_short_prompt` / `non_project_prompt` / `kb_disabled`) with existing fields intact.
+- Confirm project-retrieve path reports `decisionHint: project_signal`.
+- Confirm `/api/chat` top-level shape remains `ok/reply/meta` and provider regression checks remain green.
+- Confirm no retrieval precedence/heuristic behavior changed in this phase.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6580,7 +6595,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define the next narrow KB/project-brain trust slice for retrieval confidence scoring and low-risk relevance telemetry.
+→ Define the next narrow project-brain trust refinement slice for confidence/readability polish without changing runtime behavior.
 
 ---
 

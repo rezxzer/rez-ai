@@ -86,6 +86,15 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 30;
 const normalizePlanMode = (value) => (String(value || "").trim().toLowerCase() === "pro" ? "pro" : "free");
 const SAFE_KB_MODES = new Set(["lexical", "semantic", "hybrid"]);
+const SAFE_KB_DECISION_HINTS = new Set([
+  "kb_disabled",
+  "empty_prompt",
+  "project_signal",
+  "generic_prompt",
+  "low_signal_short_prompt",
+  "non_project_prompt",
+  "unavailable",
+]);
 const MAX_PUBLIC_KB_CITATIONS = 4;
 const normalizeKbMode = (modeLike) => {
   const mode = String(modeLike || "").trim().toLowerCase();
@@ -95,6 +104,11 @@ const normalizeNonNegativeInt = (value, fallback = 0) => {
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0) return fallback;
   return Math.floor(n);
+};
+const normalizeKbDecisionHint = (hintLike, kbEnabled) => {
+  const hint = String(hintLike || "").trim().toLowerCase();
+  if (SAFE_KB_DECISION_HINTS.has(hint)) return hint;
+  return kbEnabled ? "unavailable" : "kb_disabled";
 };
 const sanitizeKbCitation = (raw) => {
   if (!raw || typeof raw !== "object") return null;
@@ -564,6 +578,7 @@ app.post("/api/chat", rateLimitMiddleware, async (req, res) => {
       influenced: typeof baseMeta?.kb?.influenced === "boolean"
         ? baseMeta.kb.influenced
         : normalizeNonNegativeInt(baseMeta?.kb?.hits, 0) > 0,
+      decisionHint: normalizeKbDecisionHint(baseMeta?.kb?.decisionHint, Boolean(baseMeta?.kb?.enabled)),
       citations: sanitizeKbCitations(baseMeta?.kb?.citations),
     },
   });
