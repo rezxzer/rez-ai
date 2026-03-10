@@ -6454,6 +6454,22 @@ Manual verify:
 - Confirm Phase 60 workflow tools remain aligned (`Feature plan`, `Bug breakdown`, `Pick next step`, `Extract checklist`, `Create Cursor prompt`).
 - Confirm `/api/chat` request/response shape and endpoint surface remain unchanged.
 
+### Phase 62 — Operator output examples and workflow consistency audit (implemented)
+Current reality:
+- Phase 61 introduced soft structure guidance; consistency across intent classes required targeted verification.
+Target intent:
+- Validate operator response-structure behavior across representative developer/project prompts and apply only minimal safe tuning if needed.
+Guardrail:
+- Evaluation-first phase: no runtime architecture changes, no `/api/chat` schema changes, no provider/KB algorithm changes, no UI layout changes.
+Implementation status:
+- Implemented in this slice (audit + minimal precedence tuning + docs sync).
+Manual verify:
+- Probe 5-7 representative prompts (feature, bug, architecture, implementation, next-step, code-writing, generic non-dev).
+- Confirm structure guidance appears for expected developer/project prompts and stays off for generic non-dev prompt.
+- Confirm structure preference fields remain: `Goal`, `Context / assumptions`, `Step-by-step plan`, `Next step`, `Cursor prompt (if relevant)`, `Verification checklist`.
+- Confirm next-step intents are not incorrectly bucketed into architecture when phrasing includes refactor terms.
+- Confirm `/api/chat` request/response shape and endpoint surface remain unchanged.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6483,7 +6499,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next narrow response-quality polish slice after Phase 61 structure pass
+→ Define next narrow response-quality polish slice after Phase 62 consistency audit
 
 ---
 

@@ -734,14 +734,14 @@ function classifyOperatorResponseCase(userText) {
     const hasDevProjectDomain = /\b(feature|bug|issue|fix|implement|implementation|architecture|design|refactor|code|repo|file|component|endpoint|api|task|plan|checklist|cursor|project)\b/.test(src);
     if (!hasDevProjectDomain) return null;
 
+    if (/\b(next step|what next|first step|where to start|prioritize|priority)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.NEXT_STEP_SELECTION;
+    }
     if (/\b(bug|issue|error|failing|fails|broken|regression|traceback|stack trace)\b/.test(src)) {
         return OPERATOR_RESPONSE_CASES.BUG_BREAKDOWN;
     }
     if (/\b(architecture|design|refactor|module|service|schema|migration|boundary)\b/.test(src)) {
         return OPERATOR_RESPONSE_CASES.ARCHITECTURE_CHANGE;
-    }
-    if (/\b(next step|what next|first step|where to start|prioritize|priority)\b/.test(src)) {
-        return OPERATOR_RESPONSE_CASES.NEXT_STEP_SELECTION;
     }
     if (/\b(feature|capability|screen|flow|user story|epic)\b/.test(src) && /\b(plan|build|implement|design|scope)\b/.test(src)) {
         return OPERATOR_RESPONSE_CASES.FEATURE_PLANNING;
