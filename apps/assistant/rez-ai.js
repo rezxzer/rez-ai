@@ -135,6 +135,10 @@ const TOKEN_STOP_WORDS = new Set([
     // Keep a small Georgian stop-word subset to reduce noisy matching.
     "და", "რომ", "თუ", "რა", "ეს", "არის", "იყო", "თვის", "ზე", "ში"
 ]);
+const PROJECT_BRAIN_SIGNAL_RE = /\b(rez-ai|rez ai|project|phase|roadmap|repo|repository|code|coding|file|component|endpoint|api|backend|frontend|assistant|kb|rag|architecture|design|bug|issue|fix|feature|implement|implementation|workflow|next step|cursor)\b/i;
+const GENERIC_PROMPT_RE = /^\s*(hi|hello|hey|thanks|thank you|good morning|good evening)\b|^\s*(tell me a joke|write a poem|who are you|what time is it)\b/i;
+const SIMPLE_MATH_RE = /^\s*what\s+is\s+\d+\s*([+\-*/])\s*\d+\s*\??\s*$|^\s*\d+\s*([+\-*/])\s*\d+\s*$/i;
+const GENERIC_KNOWLEDGE_RE = /^\s*(what is|who is|explain|define|summarize)\b/i;
 
 function normalizeRuntimeScope(raw) {
     const mode = String(raw?.mode || "").trim().toLowerCase();
@@ -856,6 +860,37 @@ function tokenize(s) {
         .slice(0, 60);
 }
 
+function resolveKBRetrievalDecision(userText, requestedTopK) {
+    const text = String(userText || "").trim();
+    const normalized = text.toLowerCase();
+    const topK = Number.isFinite(requestedTopK) && requestedTopK > 0 ? Math.floor(requestedTopK) : 4;
+    if (!normalized) {
+        return { shouldRetrieve: false, topK: 0, reason: "empty_prompt" };
+    }
+
+    if (PROJECT_BRAIN_SIGNAL_RE.test(normalized)) {
+        return { shouldRetrieve: true, topK, reason: "project_signal" };
+    }
+
+    const tokens = normalized.split(/[^\p{L}\p{N}_-]+/u).filter(Boolean);
+    const isShort = tokens.length <= 3;
+    const hasPoemSignal = /\bpoem\b/i.test(normalized);
+    const isGeneric = GENERIC_PROMPT_RE.test(normalized)
+        || SIMPLE_MATH_RE.test(normalized)
+        || GENERIC_KNOWLEDGE_RE.test(normalized)
+        || hasPoemSignal;
+    if (isGeneric || isShort) {
+        return {
+            shouldRetrieve: false,
+            topK: 0,
+            reason: isGeneric ? "generic_prompt" : "low_signal_short_prompt",
+        };
+    }
+
+    // Project-brain focus: if prompt has no project/dev signal, avoid KB noise.
+    return { shouldRetrieve: false, topK: 0, reason: "non_project_prompt" };
+}
+
 function scoreText(qTokens, text) {
     const t = (text || "").toLowerCase();
     let score = 0;
@@ -1070,7 +1105,9 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         }
 
         const useKB = process.env.REZ_USE_KB === "1" && runtimeHooks.allowKB;
-        const topK = Number.isFinite(k) && k > 0 ? k : 4;
+        const requestedTopK = Number.isFinite(k) && k > 0 ? k : 4;
+        const kbDecision = resolveKBRetrievalDecision(userText, requestedTopK);
+        const effectiveTopK = useKB && kbDecision.shouldRetrieve ? kbDecision.topK : 0;
         let context = "";
         let kbHits = [];
         let kbMode = "lexical";
@@ -1078,7 +1115,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         let lexicalHitsCount = 0;
         let mergedHitsCount = 0;
         let citations = [];
-        if (useKB) {
+        if (useKB && kbDecision.shouldRetrieve) {
             const kbVectors = loadKBVectors();
             const vectorItems = Array.isArray(kbVectors?.items) ? kbVectors.items : [];
             const declaredDim = Number(kbVectors?.embed?.dim);
@@ -1089,13 +1126,13 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
 
             if (hasConsistentVectors) {
                 const queryVector = makeDeterministicVector(userText, declaredDim);
-                const candidateK = Math.max(topK, HYBRID_CANDIDATE_K);
+                const candidateK = Math.max(effectiveTopK, HYBRID_CANDIDATE_K);
                 const semanticHits = semanticTopK(vectorItems, queryVector, candidateK);
                 semanticHitsCount = semanticHits.length;
                 const kb = loadKB();
                 const lexicalHits = retrieve(kb, userText, candidateK);
                 lexicalHitsCount = lexicalHits.length;
-                const hybridHits = mergeHybridHits(semanticHits, lexicalHits, topK);
+                const hybridHits = mergeHybridHits(semanticHits, lexicalHits, effectiveTopK);
                 mergedHitsCount = hybridHits.length;
                 if (hybridHits.length) {
                     if (semanticHits.length > 0 && lexicalHits.length > 0) kbMode = "hybrid";
@@ -1108,14 +1145,14 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
 
             if (!context) {
                 const kb = loadKB();
-                kbHits = retrieve(kb, userText, topK);
+                kbHits = retrieve(kb, userText, effectiveTopK);
                 lexicalHitsCount = kbHits.length;
                 context = buildKBContext(kbHits, 2500);
                 kbMode = "lexical";
             }
 
             if (kbHits.length > 0) {
-                citations = kbHits.slice(0, topK).map(citationFromHit);
+                citations = kbHits.slice(0, effectiveTopK).map(citationFromHit);
             }
         }
         const envSystemPrompt = process.env.REZ_SYSTEM_PROMPT?.trim();
@@ -1290,7 +1327,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
             out,
             kb: {
                 enabled: useKB,
-                topK,
+                topK: effectiveTopK,
                 hits: kbHits.map((h) => ({
                     source: entrySource(h.entry) || "(kb)",
                     score: h.score,
