@@ -46,7 +46,11 @@ export function loadPersistedState(defaults = {}) {
     return { chats, activeChatId }
   } catch {
     // Corrupted payload should not keep breaking hydration.
-    try { localStorage.removeItem(STORAGE_KEY) } catch {}
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // Ignore cleanup failure; return null fallback below.
+    }
     return null
   }
 }

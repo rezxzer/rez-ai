@@ -387,7 +387,10 @@ function App() {
     [activeChat?.presetId]
   )
   const chatId = String(activeChatId || '')
-  const messages = activeChat?.messages || []
+  const messages = useMemo(
+    () => activeChat?.messages ?? [],
+    [activeChat?.messages]
+  )
   const [conversationSummary, setConversationSummary] = useState('')
   const [summaryLoadedChatId, setSummaryLoadedChatId] = useState('')
 
@@ -411,7 +414,7 @@ function App() {
       const nextSummary = buildConversationSummary(messages, prev)
       return prev === nextSummary ? prev : nextSummary
     })
-  }, [messages.length, chatId, summaryLoadedChatId])
+  }, [messages, messages.length, chatId, summaryLoadedChatId])
 
   useEffect(() => {
     if (!chatId) return
@@ -1931,7 +1934,7 @@ function App() {
     )
   }, [activeChatId])
 
-  const appendToActiveChat = (msg) => {
+  const appendToActiveChat = useCallback((msg) => {
     setChats(prev =>
       prev.map(c =>
         c.id === activeChatId
@@ -1939,7 +1942,7 @@ function App() {
           : c
       )
     )
-  }
+  }, [activeChatId])
 
   // Auto-scroll to bottom
   useEffect(() => {
