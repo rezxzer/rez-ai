@@ -731,7 +731,7 @@ function classifyOperatorResponseCase(userText) {
     const src = String(userText || "").toLowerCase();
     if (!src.trim()) return null;
 
-    const hasDevProjectDomain = /\b(feature|bug|issue|fix|implement|implementation|architecture|design|refactor|code|repo|file|component|endpoint|api|task|plan|checklist|cursor|project)\b/.test(src);
+    const hasDevProjectDomain = /\b(feature|bug|issue|fix|implement|implementation|architecture|design|refactor|code|repo|file|component|endpoint|api|task|plan|checklist|cursor|project|phase|execution|execute|workflow)\b/.test(src);
     if (!hasDevProjectDomain) return null;
 
     if (/\b(next step|what next|first step|where to start|prioritize|priority)\b/.test(src)) {
@@ -745,6 +745,9 @@ function classifyOperatorResponseCase(userText) {
     }
     if (/\b(feature|capability|screen|flow|user story|epic)\b/.test(src) && /\b(plan|build|implement|design|scope)\b/.test(src)) {
         return OPERATOR_RESPONSE_CASES.FEATURE_PLANNING;
+    }
+    if (/\b(cursor prompt|cursor-ready prompt|prompt draft|draft prompt)\b/.test(src)) {
+        return OPERATOR_RESPONSE_CASES.IMPLEMENTATION_HELP;
     }
     if (/\b(implement|implementation|code|write|patch|change|update|add|modify)\b/.test(src)) {
         return OPERATOR_RESPONSE_CASES.IMPLEMENTATION_HELP;

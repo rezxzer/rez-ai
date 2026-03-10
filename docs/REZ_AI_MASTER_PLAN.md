@@ -6490,6 +6490,21 @@ Manual verify:
 - Confirm docs explicitly state `remote_openai` is a compatibility stub, not production cloud integration.
 - Confirm `/api/chat` contract stability language remains unchanged.
 
+### Phase 63 — Project brain usefulness audit (implemented)
+Current reality:
+- REZ-AI has operator workflow surfaces and KB plumbing, but project-brain usefulness needed evidence-based validation across KB/context probes.
+Target intent:
+- Measure practical project-brain value for developer/project workflows (planning, next-step guidance, implementation help, memory reuse) and apply only minimal safe tuning if clearly justified.
+Guardrail:
+- Audit-first phase; no runtime architecture/provider/deployment changes and no `/api/chat` contract changes.
+Implementation status:
+- Implemented in this slice (runtime/UI/docs audit + seven probes + minimal safe prompt-shaping tuning + docs sync).
+Manual verify:
+- Run 5-7 probes with KB ON/OFF and project-context asks; confirm KB context reaches runtime in KB ON and is absent in KB OFF.
+- Confirm operator-structure guidance appears for project-brain asks (including phase-continuation and Cursor-prompt requests) and remains off for generic non-dev asks.
+- Confirm provider regression checks pass and `/api/chat` response shape remains unchanged.
+- Confirm no provider-layer or deployment-architecture behavior changes were introduced.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6519,7 +6534,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next narrow response-quality polish slice after Phase 62.1 provider abstraction clarification
+→ Define a narrow project-brain polish slice focused on KB relevance signal quality and user-visible KB context confidence.
 
 ---
 
