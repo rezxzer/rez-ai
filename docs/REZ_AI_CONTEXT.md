@@ -22,9 +22,10 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 67 — Project-brain trust surface (done)`.
+- **Current phase:** `PHASE 68 — Trust cue UI surface (done)`.
 - **Latest phase closeout:** `PHASE 56 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 68 — Trust cue UI surface`
   - `PHASE 67 — Project-brain trust surface`
   - `PHASE 66 — KB relevance calibration`
   - `PHASE 65 — KB relevance tightening`
@@ -248,7 +249,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Define the next narrow project-brain trust refinement slice for confidence/readability polish without changing runtime behavior.
+  - Define the next narrow trust/readability refinement slice (decision-hint wording polish + lightweight dynamic UI verification hardening) without changing runtime behavior.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.

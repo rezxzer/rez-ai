@@ -6566,6 +6566,21 @@ Manual verify:
 - Confirm `/api/chat` top-level shape remains `ok/reply/meta` and provider regression checks remain green.
 - Confirm no retrieval precedence/heuristic behavior changed in this phase.
 
+### Phase 68 — Trust cue UI surface (implemented)
+Current reality:
+- Phase 67 exposed `meta.kb.decisionHint` in API metadata, but UI did not display this trust cue directly.
+Target intent:
+- Surface `decisionHint` inside existing KB explainability UI with a minimal, readable label while preserving raw hint value.
+Guardrail:
+- No backend/runtime/provider changes, no `/api/chat` contract changes, no endpoint additions, no message architecture changes, no UI redesign.
+Implementation status:
+- Implemented in this slice (small additive row in existing KNOWLEDGE BASE panel + safe fallback handling for missing hint + docs sync).
+Manual verify:
+- Confirm KNOWLEDGE BASE section shows `KB decision (last response)` and includes raw hint value in parentheses.
+- Confirm API probes still return expected trust cues for project/generic/kb-disabled paths.
+- Confirm UI remains stable when `decisionHint` is missing (fallback resolves to `unavailable`/`kb_disabled` safely).
+- Confirm lint/build/provider regression checks remain green.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6595,7 +6610,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define the next narrow project-brain trust refinement slice for confidence/readability polish without changing runtime behavior.
+→ Define the next narrow trust/readability refinement slice focused on decision-hint wording polish and reliable dynamic UI verification, without changing runtime behavior.
 
 ---
 

@@ -1000,6 +1000,24 @@ How to verify:
 - Confirm `/api/chat` still returns `ok/reply/meta` and provider regression checks remain unaffected.
 Date: 2026-03-10
 
+### PHASE 68 — Trust cue UI surface
+Status: DONE
+Files touched:
+- apps/ui/src/App.jsx
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added a small additive UI trust cue row in existing KNOWLEDGE BASE explainability area: `KB decision (last response)`.
+- Rendered a human-readable decision label while preserving raw `decisionHint` value in parentheses (for example, `Project signal (project_signal)`).
+- Added safe fallback handling when `meta.kb.decisionHint` is missing (`unavailable` when KB enabled, `kb_disabled` when KB disabled), without changing message/runtime flow.
+How to verify:
+- API probes: `useKB=true` project prompt returns `decisionHint: project_signal`; generic prompt returns skip hint; `useKB=false` returns `kb_disabled`.
+- UI visual: confirm KNOWLEDGE BASE shows `KB decision (last response)` row and layout remains unchanged.
+- Missing-field safety: verify fallback label resolution for missing `decisionHint` does not crash UI.
+- Run `npm --prefix apps/ui run lint`, `npm --prefix apps/ui run build`, and `npm run check:providers`.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
