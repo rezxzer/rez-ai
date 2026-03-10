@@ -1115,6 +1115,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
         const requestedTopK = Number.isFinite(k) && k > 0 ? k : 4;
         const kbDecision = resolveKBRetrievalDecision(userText, requestedTopK);
         const effectiveTopK = useKB && kbDecision.shouldRetrieve ? kbDecision.topK : 0;
+        const kbDecisionHint = useKB ? kbDecision.reason : "kb_disabled";
         let context = "";
         let kbHits = [];
         let kbMode = "lexical";
@@ -1344,6 +1345,7 @@ async function providerChat({ systemPrompt, userText, k, providerName, modelName
                 semanticHits: semanticHitsCount,
                 lexicalHits: lexicalHitsCount,
                 mergedHits: mergedHitsCount,
+                decisionHint: kbDecisionHint,
                 citations,
             },
         };
@@ -1407,6 +1409,9 @@ function makeMeta({ provider, model, latencyMs, usage, kb }) {
             semanticHits: Number.isFinite(kb?.semanticHits) ? kb.semanticHits : 0,
             lexicalHits: Number.isFinite(kb?.lexicalHits) ? kb.lexicalHits : 0,
             mergedHits: Number.isFinite(kb?.mergedHits) ? kb.mergedHits : 0,
+            decisionHint: typeof kb?.decisionHint === "string"
+                ? kb.decisionHint
+                : (Boolean(kb?.enabled) ? "unavailable" : "kb_disabled"),
             citations: Array.isArray(kb?.citations) ? kb.citations : [],
         },
     };
@@ -1495,6 +1500,9 @@ async function main() {
                         semanticHits: Number.isFinite(kb?.semanticHits) ? kb.semanticHits : 0,
                         lexicalHits: Number.isFinite(kb?.lexicalHits) ? kb.lexicalHits : 0,
                         mergedHits: Number.isFinite(kb?.mergedHits) ? kb.mergedHits : 0,
+                        decisionHint: typeof kb?.decisionHint === "string"
+                            ? kb.decisionHint
+                            : (kb?.enabled ? "unavailable" : "kb_disabled"),
                         citations: Array.isArray(kb?.citations) ? kb.citations : [],
                     },
                 }),
