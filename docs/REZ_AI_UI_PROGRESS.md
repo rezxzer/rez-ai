@@ -907,6 +907,25 @@ How to verify:
 - Confirm this is docs-only: no runtime/provider/UI/API contract changes.
 Date: 2026-03-10
 
+### PHASE 63 — Project brain usefulness audit
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Audited project-brain usefulness across assistant runtime, UI surfaces, KB build flow, backend metadata exposure, and roadmap docs.
+- Executed seven representative probes (project continuation, next-step, implementation plan, bug reasoning, KB OFF vs KB ON generic, Cursor prompt drafting) against a probe backend to verify actual context flow.
+- Applied minimal safe prompt-shaping tuning in `classifyOperatorResponseCase` so phase-continuation and Cursor-prompt project asks correctly receive operator-structure guidance.
+- Confirmed no `/api/chat` contract change, no provider-layer change, and no deployment-architecture change.
+How to verify:
+- Re-run probes and confirm project asks show `HAS_OPERATOR_GUIDANCE:true` while generic non-dev remains `false`.
+- Confirm KB ON includes context (`HAS_KB_CONTEXT:true`) and KB OFF excludes it (`HAS_KB_CONTEXT:false`).
+- Confirm provider regression script still passes (`LMSTUDIO`, `REMOTE_OPENAI_STUB`, `UNKNOWN_PROVIDER_FALLBACK`).
+- Confirm `/api/chat` still returns stable `ok/reply/meta` with existing request keys.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
