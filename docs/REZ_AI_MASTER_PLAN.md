@@ -6424,6 +6424,21 @@ Manual verify:
 - Confirm UI layout remains stable (copy-level polish only).
 - Confirm `/api/chat` request/response shape and endpoints remain unchanged.
 
+### Phase 60 — Developer/project operator workflow surface (implemented)
+Current reality:
+- Operator identity clarity exists, but developer/project workflow routing still needed stronger explicit quick paths and recommended sequence guidance.
+Target intent:
+- Make developer/project operator workflows the default practical usage surface (feature planning, bug breakdown, next-step selection, checklist extraction, Cursor-ready prompt drafting, KB-assisted reasoning).
+Guardrail:
+- No runtime behavior changes, no provider/KB algorithm changes, and no `/api/chat` public contract changes.
+Implementation status:
+- Implemented in this slice (workflow copy/surface shaping + docs sync).
+Manual verify:
+- Confirm OPERATOR TOOLS includes explicit developer/project quick flows (`Feature plan`, `Bug breakdown`).
+- Confirm workflow helper text presents concrete recommended sequence (`feature/bug -> next step -> checklist -> Cursor prompt`).
+- Confirm welcome/preset/composer wording now emphasizes developer/project execution guidance.
+- Confirm UI layout remains stable and `/api/chat` request/response shape remains unchanged.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6453,7 +6468,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define next narrow operator workflow polish slice after Phase 59 UX clarity pass
+→ Define next narrow workflow execution polish slice after Phase 60 developer/project surface pass
 
 ---
 
