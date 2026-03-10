@@ -85,6 +85,43 @@ const rateLimitByIp = new Map();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 30;
 const normalizePlanMode = (value) => (String(value || "").trim().toLowerCase() === "pro" ? "pro" : "free");
+const SAFE_KB_MODES = new Set(["lexical", "semantic", "hybrid"]);
+const MAX_PUBLIC_KB_CITATIONS = 4;
+const normalizeKbMode = (modeLike) => {
+  const mode = String(modeLike || "").trim().toLowerCase();
+  return SAFE_KB_MODES.has(mode) ? mode : "lexical";
+};
+const normalizeNonNegativeInt = (value, fallback = 0) => {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  return Math.floor(n);
+};
+const sanitizeKbCitation = (raw) => {
+  if (!raw || typeof raw !== "object") return null;
+  const source = String(raw.source || "").trim();
+  if (!source) return null;
+  const out = { source };
+  const id = String(raw.id || "").trim();
+  if (id) out.id = id;
+  const chunkIndex = Number(raw.chunkIndex);
+  if (Number.isFinite(chunkIndex) && chunkIndex >= 0) out.chunkIndex = Math.floor(chunkIndex);
+  return out;
+};
+const sanitizeKbCitations = (list, limit = MAX_PUBLIC_KB_CITATIONS) => {
+  if (!Array.isArray(list) || limit <= 0) return [];
+  const out = [];
+  const seen = new Set();
+  for (const item of list) {
+    const safe = sanitizeKbCitation(item);
+    if (!safe) continue;
+    const key = `${safe.source}::${safe.chunkIndex ?? "na"}::${safe.id ?? "na"}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(safe);
+    if (out.length >= limit) break;
+  }
+  return out;
+};
 const DEFAULT_RUNTIME_SCOPE = Object.freeze({
   mode: "local",
   workspaceId: null,
@@ -515,6 +552,19 @@ app.post("/api/chat", rateLimitMiddleware, async (req, res) => {
       enabled: Boolean(baseMeta?.kb?.enabled),
       topK: Number.isFinite(baseMeta?.kb?.topK) ? baseMeta.kb.topK : 4,
       hits: Number.isFinite(baseMeta?.kb?.hits) ? baseMeta.kb.hits : 0,
+      mode: normalizeKbMode(baseMeta?.kb?.mode),
+      chunksUsed: normalizeNonNegativeInt(baseMeta?.kb?.chunksUsed, 0),
+      semanticHits: normalizeNonNegativeInt(baseMeta?.kb?.semanticHits, 0),
+      lexicalHits: normalizeNonNegativeInt(baseMeta?.kb?.lexicalHits, 0),
+      mergedHits: normalizeNonNegativeInt(baseMeta?.kb?.mergedHits, 0),
+      sourceCount: normalizeNonNegativeInt(
+        baseMeta?.kb?.sourceCount,
+        Array.isArray(baseMeta?.kb?.citations) ? baseMeta.kb.citations.length : 0
+      ),
+      influenced: typeof baseMeta?.kb?.influenced === "boolean"
+        ? baseMeta.kb.influenced
+        : normalizeNonNegativeInt(baseMeta?.kb?.hits, 0) > 0,
+      citations: sanitizeKbCitations(baseMeta?.kb?.citations),
     },
   });
 

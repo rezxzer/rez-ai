@@ -6505,6 +6505,21 @@ Manual verify:
 - Confirm provider regression checks pass and `/api/chat` response shape remains unchanged.
 - Confirm no provider-layer or deployment-architecture behavior changes were introduced.
 
+### Phase 64 — KB explainability surface (implemented)
+Current reality:
+- Assistant runtime already computes KB explainability signals (`mode`, hit counts, citations), but backend/UI surfaced only a narrow subset.
+Target intent:
+- Improve user-visible KB explainability using additive `meta.kb` pass-through and small UI clarity additions while keeping contract/runtime/provider/deployment stability.
+Guardrail:
+- No breaking `/api/chat` schema changes, no provider-layer changes, no deployment-architecture changes, no auth/billing/cloud rollout.
+Implementation status:
+- Implemented in this slice (safe backend pass-through + small UI explainability rows + docs sync).
+Manual verify:
+- Confirm `/api/chat` `meta.kb` still includes existing fields and now optionally includes additive explainability fields (`mode`, `sourceCount`, `influenced`, limited `citations`).
+- Confirm UI shows clearer KB explainability (`KB influenced answer`, `Last retrieval mode`, `Last source refs`) and still works if fields are absent.
+- Confirm no sensitive internals are exposed (no vectors/scores/raw context blocks in public payload).
+- Confirm provider regression checks and existing contract shape remain stable.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6534,7 +6549,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define a narrow project-brain polish slice focused on KB relevance signal quality and user-visible KB context confidence.
+→ Define a narrow KB trust polish slice focused on retrieval relevance confidence and clearer source-quality cues.
 
 ---
 
