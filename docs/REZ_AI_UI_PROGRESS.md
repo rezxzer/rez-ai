@@ -889,6 +889,24 @@ How to verify:
 - Confirm `/api/chat` response shape remains unchanged (`ok/reply/meta` success, `ok/error/meta` failure).
 Date: 2026-03-10
 
+### PHASE 62.1 — Provider abstraction clarification in documentation
+Status: DONE
+Files touched:
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Clarified documentation wording that providers represent inference runtimes rather than specific tools.
+- Clarified that current local runtimes (`lmstudio`, `ollama`) are interchangeable provider-layer implementations.
+- Clarified that future hosted/cloud/hybrid inference runtimes should connect through the same provider abstraction while keeping runtime/API contract boundaries stable.
+- Clarified that `remote_openai` remains a compatibility stub for remote-provider behavior validation, not a production cloud integration.
+How to verify:
+- Confirm the provider abstraction clarification paragraph is present in `REZ_AI_MASTER_PLAN.md` current architecture section.
+- Confirm `REZ_AI_CONTEXT.md` current architecture section includes provider abstraction + `remote_openai` compatibility-stub wording.
+- Confirm deployment strategy wording stays aligned to `local-first -> hosted/cloud option -> hybrid`.
+- Confirm this is docs-only: no runtime/provider/UI/API contract changes.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:

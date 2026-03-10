@@ -11,6 +11,9 @@ Use this as bootstrap context for new AI chats.
 - **Backend:** `server.js` (Node/Express).
 - **Assistant runtime:** `apps/assistant/rez-ai.js` (spawned by backend).
 - **Provider runtime:** LM Studio is working, Ollama is implemented/env-dependent, and `remote_openai` remains disabled/not implemented (stub path).
+- **Provider abstraction clarification:** providers represent inference runtimes rather than specific tools; current local runtimes (`lmstudio`, `ollama`) are interchangeable provider-layer implementations.
+- **Remote-provider clarification:** `remote_openai` is a compatibility stub for remote-provider behavior validation, not a production cloud integration.
+- **Deployment continuity note:** future hosted/cloud/hybrid inference runtimes are expected to connect through the same provider abstraction without breaking runtime/API contract boundaries.
 - **Communication flow (baseline):**
   - UI -> `POST /api/chat`
     - core fields: `message`, `systemPrompt`, `useKB`
@@ -19,9 +22,10 @@ Use this as bootstrap context for new AI chats.
   - Assistant -> builds messages, optional KB injection, routes to selected provider runtime.
 
 ## 3) Current project state
-- **Current phase:** `PHASE 62 — Operator output examples and workflow consistency audit (done)`.
+- **Current phase:** `PHASE 62.1 — Provider abstraction clarification in documentation (done)`.
 - **Latest phase closeout:** `PHASE 56 DoD — PASS`.
 - **Latest completed work (UI progress ledger):**
+  - `PHASE 62.1 — Provider abstraction clarification in documentation`
   - `PHASE 62 — Operator output examples and workflow consistency audit`
   - `PHASE 61 — Operator response structure for developer/project workflows`
   - `PHASE 60 — Developer/project operator workflow surface`
@@ -239,7 +243,7 @@ Use this as bootstrap context for new AI chats.
   - No new endpoints/request keys/response fields.
   - No workflow/permissions/audit/billing/workspace DB engines implemented yet.
 - **Next step:**
-  - Define next narrow response-quality polish slice after Phase 62 consistency audit.
+  - Define next narrow response-quality polish slice after Phase 62.1 provider abstraction clarification.
 - **Workspace-scoped runtime core (Step 1):**
   - **Current reality:** runtime remains local/non-workspace in behavior; integrated workspace runtime is not implemented.
   - **Implemented now:** backend resolves internal runtime scope and passes it to assistant; assistant safely parses/falls back to local scope.
