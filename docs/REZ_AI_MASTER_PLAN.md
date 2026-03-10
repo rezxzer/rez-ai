@@ -6520,6 +6520,21 @@ Manual verify:
 - Confirm no sensitive internals are exposed (no vectors/scores/raw context blocks in public payload).
 - Confirm provider regression checks and existing contract shape remain stable.
 
+### Phase 65 — KB relevance tightening (implemented)
+Current reality:
+- KB retrieval was always attempted when `useKB=true`, so generic/non-project prompts could still pull noisy KB chunks.
+Target intent:
+- Tighten KB relevance so project/dev prompts keep KB assistance while generic prompts avoid unnecessary retrieval noise.
+Guardrail:
+- No `/api/chat` breaking schema changes, no provider/inference runtime changes, no deployment architecture changes, no new APIs.
+Implementation status:
+- Implemented in this slice (deterministic retrieval gating heuristics + verification probes + docs sync).
+Manual verify:
+- Confirm project/dev prompts (`project`, `phase`, `code`, `architecture`, `bug`, `feature`, `implementation`, `REZ-AI`) still retrieve KB context normally.
+- Confirm generic prompts (greetings/simple math/open-domain generic asks) skip KB retrieval (`topK:0`, `hits:0`, `influenced:false`).
+- Confirm Phase 64 explainability fields remain stable and safe (`mode`, `sourceCount`, `influenced`, limited citations).
+- Confirm `/api/chat` contract remains backward-compatible and provider regression checks still pass.
+
 ---
 
 # ⚠ TECHNICAL DEBT TRACKER
@@ -6549,7 +6564,7 @@ Business-ready later.
 
 # 🎯 CURRENT NEXT STEP
 
-→ Define a narrow KB trust polish slice focused on retrieval relevance confidence and clearer source-quality cues.
+→ Define the next narrow project-brain quality slice for retrieval precision/recall calibration under real project datasets.
 
 ---
 

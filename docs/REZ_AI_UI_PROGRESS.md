@@ -945,6 +945,24 @@ How to verify:
 - Confirm provider regression and contract checks remain stable.
 Date: 2026-03-10
 
+### PHASE 65 — KB relevance tightening
+Status: DONE
+Files touched:
+- apps/assistant/rez-ai.js
+- docs/REZ_AI_CONTEXT.md
+- docs/REZ_AI_MASTER_PLAN.md
+- docs/REZ_AI_UI_PROGRESS.md
+What changed:
+- Added deterministic KB relevance gating for `useKB=true` path so project/dev prompts keep KB retrieval while generic/non-project prompts skip retrieval.
+- Introduced lightweight prompt-signal heuristics (`project/dev` signal allowlist vs generic greeting/math/open-domain patterns) without changing provider/runtime architecture.
+- Kept Phase 64 explainability fields stable; skipped retrieval now reports safe explainability values (`topK:0`, `hits:0`, `influenced:false`).
+How to verify:
+- Probe generic prompts with `useKB=true` and confirm KB is skipped (`topK:0`, `hits:0`, `sourceCount:0`, `influenced:false`).
+- Probe project/dev prompts with `useKB=true` and confirm KB remains active (`hits>0`, `mode` populated, citations present).
+- Probe control with `useKB=false` and confirm unchanged disabled behavior.
+- Confirm `/api/chat` contract remains backward-compatible and provider regression checks still pass.
+Date: 2026-03-10
+
 ### PHASE 3 Step 4 — Citations in meta
 Status: DONE
 Files touched:
